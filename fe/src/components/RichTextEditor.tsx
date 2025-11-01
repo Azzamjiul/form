@@ -119,6 +119,35 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
           <path d="M10.59,13.41C11,13.8 11,14.44 10.59,14.83C10.2,15.22 9.56,15.22 9.17,14.83C7.22,12.88 7.22,9.71 9.17,7.76V7.76L12.71,4.22C14.66,2.27 17.83,2.27 19.78,4.22C21.73,6.17 21.73,9.34 19.78,11.29L18.29,12.78C18.3,11.96 18.17,11.14 17.89,10.36L18.36,9.88C19.54,8.71 19.54,6.81 18.36,5.64C17.19,4.46 15.29,4.46 14.12,5.64L10.59,9.17C9.41,10.34 9.41,12.24 10.59,13.41M13.41,9.17C13.8,8.78 14.44,8.78 14.83,9.17C16.78,11.12 16.78,14.29 14.83,16.24V16.24L11.29,19.78C9.34,21.73 6.17,21.73 4.22,19.78C2.27,17.83 2.27,14.66 4.22,12.71L5.71,11.22C5.7,12.04 5.83,12.86 6.11,13.65L5.64,14.12C4.46,15.29 4.46,17.19 5.64,18.36C6.81,19.54 8.71,19.54 9.88,18.36L13.41,14.83C14.59,13.66 14.59,11.76 13.41,10.59C13,10.2 13,9.56 13.41,9.17Z" />
         </svg>
       </button>
+      <div className="w-px h-6 bg-gray-300 mx-1" />
+      <button
+        onMouseDown={handleMouseDown}
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+        className={`p-2 rounded transition-colors ${
+          editor.isActive('bulletList')
+            ? 'bg-gray-200 text-gray-900'
+            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+        }`}
+        title="Bullet List"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M7,5H21V7H7V5M7,13V11H21V13H7M4,4.5A1.5,1.5 0 0,1 5.5,6A1.5,1.5 0 0,1 4,7.5A1.5,1.5 0 0,1 2.5,6A1.5,1.5 0 0,1 4,4.5M4,10.5A1.5,1.5 0 0,1 5.5,12A1.5,1.5 0 0,1 4,13.5A1.5,1.5 0 0,1 2.5,12A1.5,1.5 0 0,1 4,10.5M7,19V17H21V19H7M4,16.5A1.5,1.5 0 0,1 5.5,18A1.5,1.5 0 0,1 4,19.5A1.5,1.5 0 0,1 2.5,18A1.5,1.5 0 0,1 4,16.5Z" />
+        </svg>
+      </button>
+      <button
+        onMouseDown={handleMouseDown}
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        className={`p-2 rounded transition-colors ${
+          editor.isActive('orderedList')
+            ? 'bg-gray-200 text-gray-900'
+            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+        }`}
+        title="Numbered List"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M7,13V11H21V13H7M4,4.5A1.5,1.5 0 0,1 5.5,6A1.5,1.5 0 0,1 4,7.5A1.5,1.5 0 0,1 2.5,6A1.5,1.5 0 0,1 4,4.5M7,3V5H21V3H7M4,16.5A1.5,1.5 0 0,1 5.5,18A1.5,1.5 0 0,1 4,19.5A1.5,1.5 0 0,1 2.5,18A1.5,1.5 0 0,1 4,16.5M7,15V17H21V15H7M7,9V7H21V9H7Z" />
+        </svg>
+      </button>
     </div>
   );
 };
@@ -136,7 +165,18 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        orderedList: {
+          HTMLAttributes: {
+            class: 'list-decimal pl-6',
+          },
+        },
+        bulletList: {
+          HTMLAttributes: {
+            class: 'list-disc pl-6',
+          },
+        },
+      }),
       Underline,
       Link.configure({
         openOnClick: false,
@@ -197,6 +237,19 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       }
       .ProseMirror:focus {
         outline: none !important;
+      }
+      .ProseMirror ol {
+        list-style: decimal !important;
+        padding-left: 1.5rem !important;
+        margin: 0.5rem 0 !important;
+      }
+      .ProseMirror ul {
+        list-style: disc !important;
+        padding-left: 1.5rem !important;
+        margin: 0.5rem 0 !important;
+      }
+      .ProseMirror li {
+        margin: 0.25rem 0 !important;
       }
     `;
     document.head.appendChild(style);
