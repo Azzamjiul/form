@@ -48,56 +48,79 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
       isDragging: false
     });
 
-    let currentOrder = 1;
+    let canvasOrder = 1;
+    let sectionCount = 0;
 
-    // Add sections and their fields
-    if (formData.sections && formData.sections.length > 0) {
-      formData.sections.forEach((section, sectionIndex) => {
-        // Add title/description section
-        transformedItems.push({
-          id: `section-${section.section_id}`,
-          type: 'title-description',
-          title: section.title || '',
-          description: section.description || '',
-          order: currentOrder++,
-          isEditing: false,
-          isSelected: false,
-          isDragging: false
-        });
-
-        // Add fields for this section
-        if (section.fields && section.fields.length > 0) {
-          section.fields.forEach((field) => {
-            transformedItems.push({
-              id: field.field_id,
-              type: 'question',
-              title: field.label || 'Untitled Question',
-              description: field.description || '',
-              questionType: field.field_type || 'text',
-              required: field.is_required || false,
-              options: field.options || [],
-              order: currentOrder++,
-              isEditing: false,
-              isSelected: false,
-              isDragging: false
-            });
-          });
-        }
-
-        // Add page break except for last section
-        if (sectionIndex < formData.sections!.length - 1) {
+    // Process content items (already sorted by order_global from backend)
+    if (formData.content_items && formData.content_items.length > 0) {
+      formData.content_items.forEach((item, index) => {
+        if (item.type === 'field' && item.field) {
+          // Add standalone field
+          const field = item.field;
           transformedItems.push({
-            id: `page-break-${section.section_id}`,
-            type: 'page-break',
-            title: '',
-            description: '',
-            sectionNumber: sectionIndex + 1,
-            totalSections: formData.sections!.length,
-            order: currentOrder++,
+            id: field.field_id,
+            type: 'question',
+            title: field.label || 'Untitled Question',
+            description: field.description || '',
+            questionType: field.field_type || 'text',
+            required: field.is_required || false,
+            options: field.options || [],
+            order: canvasOrder++,
             isEditing: false,
             isSelected: false,
             isDragging: false
           });
+        } else if (item.type === 'section' && item.section) {
+          // Add section
+          const section = item.section;
+          sectionCount++;
+
+          transformedItems.push({
+            id: `section-${section.section_id}`,
+            type: 'title-description',
+            title: section.title || '',
+            description: section.description || '',
+            order: canvasOrder++,
+            isEditing: false,
+            isSelected: false,
+            isDragging: false
+          });
+
+          // Add fields for this section
+          if (section.fields && section.fields.length > 0) {
+            section.fields.forEach((field) => {
+              transformedItems.push({
+                id: field.field_id,
+                type: 'question',
+                title: field.label || 'Untitled Question',
+                description: field.description || '',
+                questionType: field.field_type || 'text',
+                required: field.is_required || false,
+                options: field.options || [],
+                order: canvasOrder++,
+                isEditing: false,
+                isSelected: false,
+                isDragging: false
+              });
+            });
+          }
+
+          // Add page break if next item is also a section
+          const nextItem = formData.content_items[index + 1];
+          if (nextItem && nextItem.type === 'section') {
+            transformedItems.push({
+              id: `page-break-${section.section_id}`,
+              type: 'page-break',
+              title: '',
+              description: '',
+              sectionNumber: sectionCount,
+              totalSections: formData.sections?.length || 0,
+              order: canvasOrder++,
+              isEditing: false,
+              isSelected: false,
+              isDragging: false
+            });
+          }
         }
       });
     }

@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"form-api/models"
@@ -55,6 +56,8 @@ func (s *FormService) GetFormByID(formID uuid.UUID, userID uuid.UUID) (*models.F
 		return db.Order("order_global ASC")
 	}).Preload("Sections.Fields", func(db *gorm.DB) *gorm.DB {
 		return db.Order("order_in_section ASC")
+	}).Preload("Fields", func(db *gorm.DB) *gorm.DB {
+		return db.Where("section_id IS NULL").Order("order_global ASC")
 	}).Where("id = ? AND deleted_at IS NULL", formID).First(&form).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("Form not found")
@@ -384,7 +387,9 @@ func (s *FormService) buildFormDetailResponse(form *models.Form) *models.FormDet
 
 func (s *FormService) buildFormWithSectionsResponse(form *models.Form) *models.FormWithSectionsResponse {
 	sections := make([]models.SectionResponse, 0, len(form.Sections))
+	sectionsMap := make(map[string]*models.SectionResponse)
 
+	// Build sections with their fields
 	for _, section := range form.Sections {
 		fields := make([]models.FieldResponse, 0, len(section.Fields))
 
@@ -408,7 +413,7 @@ func (s *FormService) buildFormWithSectionsResponse(form *models.Form) *models.F
 			prerequisiteSectionID = &id
 		}
 
-		sections = append(sections, models.SectionResponse{
+		sectionResp := models.SectionResponse{
 			SectionID:             section.ID.String(),
 			Title:                 section.Title,
 			Description:           section.Description,
@@ -416,8 +421,52 @@ func (s *FormService) buildFormWithSectionsResponse(form *models.Form) *models.F
 			VisibilityType:        section.VisibilityType,
 			PrerequisiteSectionID: prerequisiteSectionID,
 			Fields:                fields,
+		}
+		sections = append(sections, sectionResp)
+		sectionsMap[section.ID.String()] = &sectionResp
+	}
+
+	// Build standalone fields (fields without section_id)
+	standaloneFields := make([]models.FieldResponse, 0, len(form.Fields))
+	for _, field := range form.Fields {
+		standaloneFields = append(standaloneFields, models.FieldResponse{
+			FieldID:        field.ID.String(),
+			ContentType:    field.ContentType,
+			FieldType:      field.FieldType,
+			Label:          field.Label,
+			Description:    field.Description,
+			OrderGlobal:    field.OrderGlobal,
+			OrderInSection: field.OrderInSection,
+			IsRequired:     field.IsRequired,
+			Points:         field.Points,
 		})
 	}
+
+	// Build content items - unified list of sections and standalone fields sorted by order_global
+	contentItems := make([]models.FormContentItem, 0)
+
+	// Add sections as content items
+	for i := range sections {
+		contentItems = append(contentItems, models.FormContentItem{
+			Type:        "section",
+			OrderGlobal: sections[i].OrderGlobal,
+			Section:     &sections[i],
+		})
+	}
+
+	// Add standalone fields as content items
+	for i := range standaloneFields {
+		contentItems = append(contentItems, models.FormContentItem{
+			Type:        "field",
+			OrderGlobal: standaloneFields[i].OrderGlobal,
+			Field:       &standaloneFields[i],
+		})
+	}
+
+	// Sort content items by order_global
+	sort.Slice(contentItems, func(i, j int) bool {
+		return contentItems[i].OrderGlobal < contentItems[j].OrderGlobal
+	})
 
 	return &models.FormWithSectionsResponse{
 		FormID:             form.ID.String(),
@@ -434,5 +483,7 @@ func (s *FormService) buildFormWithSectionsResponse(form *models.Form) *models.F
 		CreatedAt:          form.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 		UpdatedAt:          form.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
 		Sections:           sections,
+		Fields:             standaloneFields,
+		ContentItems:       contentItems,
 	}
 }

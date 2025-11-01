@@ -65,8 +65,17 @@ export interface FormField {
   options?: Array<{ id: string; label: string }>;
 }
 
+export interface FormContentItem {
+  type: 'section' | 'field';
+  order_global: number;
+  section?: FormSection;
+  field?: FormField;
+}
+
 export interface FormWithSections extends Form {
   sections: FormSection[];
+  fields: FormField[];
+  content_items: FormContentItem[];
 }
 
 export interface PaginationResponse {

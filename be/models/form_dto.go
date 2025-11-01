@@ -46,20 +46,30 @@ type FormDetailResponse struct {
 }
 
 type FormWithSectionsResponse struct {
-	FormID             string            `json:"form_id"`
-	Title              string            `json:"title"`
-	Description        *string           `json:"description,omitempty"`
-	FormType           string            `json:"form_type"`
-	CreatorID          string            `json:"creator_id"`
-	TimeLimitMinutes   int               `json:"time_limit_minutes"`
-	PassingScore       *int              `json:"passing_score,omitempty"`
-	ShowCorrectAnswers bool              `json:"show_correct_answers"`
-	ShuffleQuestions   bool              `json:"shuffle_questions"`
-	IsPublished        bool              `json:"is_published"`
-	TotalPoints        int               `json:"total_points"`
-	CreatedAt          string            `json:"created_at"`
-	UpdatedAt          string            `json:"updated_at"`
-	Sections           []SectionResponse `json:"sections"`
+	FormID             string               `json:"form_id"`
+	Title              string               `json:"title"`
+	Description        *string              `json:"description,omitempty"`
+	FormType           string               `json:"form_type"`
+	CreatorID          string               `json:"creator_id"`
+	TimeLimitMinutes   int                  `json:"time_limit_minutes"`
+	PassingScore       *int                 `json:"passing_score,omitempty"`
+	ShowCorrectAnswers bool                 `json:"show_correct_answers"`
+	ShuffleQuestions   bool                 `json:"shuffle_questions"`
+	IsPublished        bool                 `json:"is_published"`
+	TotalPoints        int                  `json:"total_points"`
+	CreatedAt          string               `json:"created_at"`
+	UpdatedAt          string               `json:"updated_at"`
+	Sections           []SectionResponse    `json:"sections"`
+	Fields             []FieldResponse      `json:"fields"`
+	ContentItems       []FormContentItem    `json:"content_items"` // Ordered list of all content
+}
+
+// FormContentItem represents a content item (section or standalone field) in global order
+type FormContentItem struct {
+	Type        string           `json:"type"` // "section" or "field"
+	OrderGlobal int              `json:"order_global"`
+	Section     *SectionResponse `json:"section,omitempty"`
+	Field       *FieldResponse   `json:"field,omitempty"`
 }
 
 type SectionResponse struct {
