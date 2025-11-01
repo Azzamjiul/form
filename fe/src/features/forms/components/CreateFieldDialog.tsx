@@ -42,6 +42,7 @@ export const CreateFieldDialog: React.FC<CreateFieldDialogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Create field form submitted:', { formId, formData });
     setError(null);
 
     // Validation

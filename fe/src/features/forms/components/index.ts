@@ -15,6 +15,14 @@ export { TopNavigation } from './TopNavigation';
 export { ShareModal } from './ShareModal';
 export { SettingsModal } from './SettingsModal';
 
+// Center Canvas components
+export { CenterCanvas } from './CenterCanvas';
+export { SurveyHeaderCard } from './SurveyHeaderCard';
+export { TitleDescriptionCard } from './TitleDescriptionCard';
+export { QuestionCard } from './QuestionCard';
+export { PageBreakCard } from './PageBreakCard';
+export { AddElementSection } from './AddElementSection';
+
 // Whitelist components
 export { CreateWhitelistDialog } from './CreateWhitelistDialog';
 export { WhitelistManagement } from './WhitelistManagement';

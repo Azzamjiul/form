@@ -30,6 +30,7 @@ export const CreateSectionDialog: React.FC<CreateSectionDialogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Create section form submitted:', { formId, formData });
     setError(null);
 
     // Validation
