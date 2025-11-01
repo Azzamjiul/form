@@ -21,6 +21,7 @@ type ErrorData struct {
 const (
 	ErrCodeValidation     = "VALIDATION_ERROR"
 	ErrCodeAuthentication = "AUTHENTICATION_ERROR"
+	ErrCodeAuthorization  = "AUTHORIZATION_ERROR"
 	ErrCodeNotFound       = "NOT_FOUND"
 	ErrCodeInternal       = "INTERNAL_ERROR"
 )

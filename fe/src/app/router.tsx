@@ -7,6 +7,8 @@ import { OrdersPage } from "./pages/OrdersPage"
 import { ProductsPage } from "./pages/ProductsPage"
 import { RegisterPage } from "./pages/RegisterPage"
 import { SettingsPage } from "./pages/SettingsPage"
+import FormsPage from "./pages/FormsPage"
+import FormDetailPage from "./pages/FormDetailPage"
 
 export const AppRouter = () => {
   return (
@@ -20,6 +22,8 @@ export const AppRouter = () => {
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/customers" element={<CustomersPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/forms" element={<FormsPage />} />
+        <Route path="/forms/:formId" element={<FormDetailPage />} />
       </Routes>
     </BrowserRouter>
   )

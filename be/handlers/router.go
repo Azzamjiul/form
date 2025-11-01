@@ -13,12 +13,14 @@ import (
 
 type Router struct {
 	authHandler *AuthHandler
+	formHandler *FormHandler
 	jwtUtil     *utils.JWTUtil
 }
 
-func NewRouter(authHandler *AuthHandler, jwtUtil *utils.JWTUtil) *Router {
+func NewRouter(authHandler *AuthHandler, formHandler *FormHandler, jwtUtil *utils.JWTUtil) *Router {
 	return &Router{
 		authHandler: authHandler,
+		formHandler: formHandler,
 		jwtUtil:     jwtUtil,
 	}
 }
@@ -37,6 +39,19 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 			// Protected routes
 			auth.GET("/me", middleware.AuthMiddleware(r.jwtUtil), r.authHandler.GetMe)
 			auth.POST("/logout", middleware.AuthMiddleware(r.jwtUtil), r.authHandler.Logout)
+		}
+
+		// Form routes (all protected)
+		forms := api.Group("/forms")
+		forms.Use(middleware.AuthMiddleware(r.jwtUtil))
+		{
+			forms.POST("", r.formHandler.CreateForm)
+			forms.GET("", r.formHandler.ListUserForms)
+			forms.GET("/:form_id", r.formHandler.GetFormByID)
+			forms.PUT("/:form_id", r.formHandler.UpdateForm)
+			forms.DELETE("/:form_id", r.formHandler.DeleteForm)
+			forms.POST("/:form_id/duplicate", r.formHandler.DuplicateForm)
+			forms.PATCH("/:form_id/publish", r.formHandler.PublishForm)
 		}
 	}
 
