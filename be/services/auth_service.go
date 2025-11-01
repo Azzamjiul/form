@@ -3,9 +3,9 @@ package services
 import (
 	"errors"
 
-	"memotoko-api/config"
-	"memotoko-api/models"
-	"memotoko-api/utils"
+	"form-api/config"
+	"form-api/models"
+	"form-api/utils"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"

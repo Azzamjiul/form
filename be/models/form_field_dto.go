@@ -14,7 +14,7 @@ type CreateFieldRequest struct {
 	SectionID      *string         `json:"section_id"`
 	IsRequired     *bool           `json:"is_required"`
 	Points         *int            `json:"points"`
-	AnswerKey      *datatypes.JSON `json:"answer_key"`
+	AnswerKey      *datatypes.JSON `json:"answer_key" swaggertype:"object"`
 }
 
 type UpdateFieldRequest struct {
@@ -22,7 +22,7 @@ type UpdateFieldRequest struct {
 	Description    *string         `json:"description"`
 	IsRequired     *bool           `json:"is_required"`
 	Points         *int            `json:"points"`
-	AnswerKey      *datatypes.JSON `json:"answer_key"`
+	AnswerKey      *datatypes.JSON `json:"answer_key" swaggertype:"object"`
 	OrderGlobal    *int            `json:"order_global"`
 	OrderInSection *int            `json:"order_in_section"`
 	SectionID      *string         `json:"section_id"`

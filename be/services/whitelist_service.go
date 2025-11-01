@@ -5,10 +5,11 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"memotoko-api/models"
+	"form-api/models"
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -54,6 +55,12 @@ func (s *WhitelistService) CreateWhitelistEntry(formID uuid.UUID, req *models.Cr
 		return nil, errors.New("Failed to generate access token")
 	}
 
+	// Handle metadata (convert from pointer to value)
+	var metadata datatypes.JSON
+	if req.Metadata != nil {
+		metadata = *req.Metadata
+	}
+
 	// Create whitelist entry
 	whitelist := &models.FormWhitelist{
 		ID:             uuid.New(),
@@ -65,7 +72,7 @@ func (s *WhitelistService) CreateWhitelistEntry(formID uuid.UUID, req *models.Cr
 		MaxAttempts:    req.MaxAttempts,
 		AttemptsUsed:   0,
 		ExpiresAt:      expiresAt,
-		Metadata:       req.Metadata,
+		Metadata:       metadata,
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
 	}

@@ -24,7 +24,7 @@ func LoadConfig() *Config {
 
 	return &Config{
 		ServerPort:         getEnv("SERVER_PORT", "8080"),
-		DatabaseURL:        getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/memotoko?sslmode=disable"),
+		DatabaseURL:        getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/form?sslmode=disable"),
 		JWTSecret:          getEnv("JWT_SECRET", "your-secret-key"),
 		JWTRefreshSecret:   getEnv("JWT_REFRESH_SECRET", "your-refresh-secret-key"),
 		AccessTokenExpiry:  getEnv("ACCESS_TOKEN_EXPIRY", "15m"),

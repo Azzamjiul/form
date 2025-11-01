@@ -51,12 +51,12 @@ Common issues and solutions for the authentication integration.
 
 3. Verify database exists:
    ```bash
-   psql -U postgres -c "\l" | grep memotoko
+   psql -U postgres -c "\l" | grep form
    ```
 
 4. Create database if needed:
    ```bash
-   psql -U postgres -c "CREATE DATABASE memotoko;"
+   psql -U postgres -c "CREATE DATABASE form;"
    ```
 
 5. Check environment variables:
@@ -375,7 +375,7 @@ If all else fails, reset everything:
 ```bash
 # 1. Stop all servers
 # 2. Clear database
-psql -U postgres -d memotoko -c "DROP TABLE users;"
+psql -U postgres -d form -c "DROP TABLE users;"
 
 # 3. Clear frontend
 cd fe

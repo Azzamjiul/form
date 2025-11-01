@@ -27,7 +27,7 @@ This guide will help you get the authentication system up and running.
    export DB_PORT=5432
    export DB_USER=your_db_user
    export DB_PASSWORD=your_db_password
-   export DB_NAME=memotoko
+   export DB_NAME=form
    export JWT_SECRET=your_secret_key_here
    export JWT_REFRESH_SECRET=your_refresh_secret_key_here
    export SERVER_PORT=8080
@@ -134,7 +134,7 @@ Visit `http://localhost:8080/docs` to see the interactive API documentation powe
 ## Project Structure
 
 ```
-MemoToko/
+form/
 ├── be/                           # Backend (Go)
 │   ├── main.go                  # Entry point
 │   ├── config/                  # Configuration

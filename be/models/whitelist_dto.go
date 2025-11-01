@@ -10,7 +10,7 @@ type CreateWhitelistRequest struct {
 	Name           string          `json:"name" binding:"required"`
 	MaxAttempts    int             `json:"max_attempts" binding:"required,min=1"`
 	ExpiresAt      string          `json:"expires_at" binding:"required"` // RFC3339 format
-	Metadata       *datatypes.JSON `json:"metadata,omitempty"`
+	Metadata       *datatypes.JSON `json:"metadata,omitempty" swaggertype:"object"`
 }
 
 type BatchCreateWhitelistRequest struct {
@@ -20,7 +20,7 @@ type BatchCreateWhitelistRequest struct {
 type UpdateWhitelistRequest struct {
 	MaxAttempts *int            `json:"max_attempts,omitempty" binding:"omitempty,min=1"`
 	ExpiresAt   *string         `json:"expires_at,omitempty"` // RFC3339 format
-	Metadata    *datatypes.JSON `json:"metadata,omitempty"`
+	Metadata    *datatypes.JSON `json:"metadata,omitempty" swaggertype:"object"`
 }
 
 // Response DTOs

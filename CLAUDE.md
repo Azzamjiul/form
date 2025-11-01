@@ -21,7 +21,7 @@ cd be
 go run main.go
 
 # Build the application
-go build -o memotoko-api
+go build -o form-api
 
 # Install dependencies
 go mod tidy
@@ -30,8 +30,8 @@ go mod tidy
 swag init
 
 # Run database migrations (requires golang-migrate)
-migrate -path migrations -database "postgres://postgres:postgres@localhost:5432/memotoko?sslmode=disable" up
-migrate -path migrations -database "postgres://postgres:postgres@localhost:5432/memotoko?sslmode=disable" down
+migrate -path migrations -database "postgres://postgres:postgres@localhost:5432/form?sslmode=disable" up
+migrate -path migrations -database "postgres://postgres:postgres@localhost:5432/form?sslmode=disable" down
 ```
 
 ### Frontend (React)
@@ -167,7 +167,7 @@ Backend `quiz_service.go` `calculateScore()`:
 
 ```bash
 SERVER_PORT=8080
-DATABASE_URL=postgres://postgres:postgres@localhost:5432/memotoko?sslmode=disable
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/form?sslmode=disable
 JWT_SECRET=your-secret-key
 JWT_REFRESH_SECRET=your-refresh-secret-key
 ACCESS_TOKEN_EXPIRY=15m

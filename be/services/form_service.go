@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"memotoko-api/models"
+	"form-api/models"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"

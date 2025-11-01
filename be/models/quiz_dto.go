@@ -10,7 +10,7 @@ type StartQuizRequest struct {
 
 type AutoSaveAnswerRequest struct {
 	FieldID     string         `json:"field_id" binding:"required"`
-	AnswerValue datatypes.JSON `json:"answer_value" binding:"required"`
+	AnswerValue datatypes.JSON `json:"answer_value" binding:"required" swaggertype:"object"`
 }
 
 type SubmitQuizRequest struct {
@@ -19,7 +19,7 @@ type SubmitQuizRequest struct {
 
 type SubmitAnswerItem struct {
 	FieldID     string         `json:"field_id" binding:"required"`
-	AnswerValue datatypes.JSON `json:"answer_value" binding:"required"`
+	AnswerValue datatypes.JSON `json:"answer_value" binding:"required" swaggertype:"object"`
 }
 
 type ResumeQuizRequest struct {

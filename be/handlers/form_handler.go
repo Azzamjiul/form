@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"memotoko-api/models"
-	"memotoko-api/services"
+	"form-api/models"
+	"form-api/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

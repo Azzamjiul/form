@@ -1,4 +1,4 @@
-.PHONY: migrate-up migrate-down migrate-create migrate-force migrate-version migrate-drop migrate-goto help
+.PHONY: migrate-up migrate-down migrate-create migrate-force migrate-version migrate-drop migrate-goto swag dev run build help
 
 # Load environment variables from .env file if it exists
 ifneq (,$(wildcard .env))
@@ -11,6 +11,12 @@ DATABASE_URL ?= postgres://postgres:postgres@localhost:5432/form?sslmode=disable
 MIGRATIONS_DIR = ./migrations
 
 help:
+	@echo "Development Commands:"
+	@echo "  make dev                - Run development server with hot reload (requires air)"
+	@echo "  make run                - Run the application"
+	@echo "  make build              - Build the application"
+	@echo "  make swag               - Generate Swagger documentation"
+	@echo ""
 	@echo "Migration Commands:"
 	@echo "  make migrate-up         - Apply all pending migrations"
 	@echo "  make migrate-down       - Rollback the last migration"
@@ -65,3 +71,24 @@ migrate-goto:
 	fi
 	@echo "Migrating to version $(version)..."
 	migrate -path $(MIGRATIONS_DIR) -database "$(DATABASE_URL)" goto $(version)
+
+swag:
+	@echo "Generating Swagger documentation..."
+	swag init
+
+dev:
+	@echo "Starting development server with hot reload..."
+	@if ! command -v air > /dev/null; then \
+		echo "Error: air is not installed. Install with:"; \
+		echo "  go install github.com/air-verse/air@latest"; \
+		exit 1; \
+	fi
+	air
+
+run:
+	@echo "Running application..."
+	go run main.go
+
+build:
+	@echo "Building application..."
+	go build -o form-api

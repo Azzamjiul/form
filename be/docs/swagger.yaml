@@ -1,13 +1,148 @@
 basePath: /api
 definitions:
-  models.AuthResponse:
+  models.APIResponse:
     properties:
-      access_token:
+      data: {}
+      error:
+        $ref: '#/definitions/models.ErrorData'
+      success:
+        type: boolean
+      timestamp:
         type: string
-      refresh_token:
+    type: object
+  models.AutoSaveAnswerRequest:
+    properties:
+      answer_value:
+        type: object
+      field_id:
         type: string
-      user:
-        $ref: '#/definitions/models.User'
+    required:
+    - answer_value
+    - field_id
+    type: object
+  models.BatchCreateWhitelistRequest:
+    properties:
+      entries:
+        items:
+          $ref: '#/definitions/models.CreateWhitelistRequest'
+        minItems: 1
+        type: array
+    required:
+    - entries
+    type: object
+  models.CreateFieldRequest:
+    properties:
+      answer_key:
+        type: object
+      content_type:
+        enum:
+        - input_field
+        - section
+        - display_text
+        type: string
+      description:
+        type: string
+      field_type:
+        type: string
+      is_required:
+        type: boolean
+      label:
+        type: string
+      order_global:
+        type: integer
+      order_in_section:
+        type: integer
+      points:
+        type: integer
+      section_id:
+        type: string
+    required:
+    - content_type
+    - label
+    - order_global
+    type: object
+  models.CreateFormRequest:
+    properties:
+      description:
+        type: string
+      form_type:
+        enum:
+        - survey
+        - quiz
+        type: string
+      passing_score:
+        type: integer
+      show_correct_answers:
+        type: boolean
+      shuffle_questions:
+        type: boolean
+      time_limit_minutes:
+        type: integer
+      title:
+        type: string
+    required:
+    - form_type
+    - title
+    type: object
+  models.CreateSectionRequest:
+    properties:
+      description:
+        type: string
+      order_global:
+        type: integer
+      prerequisite_section_id:
+        type: string
+      title:
+        type: string
+      visibility_type:
+        enum:
+        - always
+        - after_section
+        type: string
+    required:
+    - order_global
+    - title
+    - visibility_type
+    type: object
+  models.CreateWhitelistRequest:
+    properties:
+      email:
+        type: string
+      expires_at:
+        description: RFC3339 format
+        type: string
+      external_user_id:
+        type: string
+      max_attempts:
+        minimum: 1
+        type: integer
+      metadata:
+        type: object
+      name:
+        type: string
+    required:
+    - email
+    - expires_at
+    - external_user_id
+    - max_attempts
+    - name
+    type: object
+  models.DuplicateFormRequest:
+    properties:
+      new_title:
+        type: string
+    required:
+    - new_title
+    type: object
+  models.ErrorData:
+    properties:
+      code:
+        type: string
+      details:
+        additionalProperties: true
+        type: object
+      message:
+        type: string
     type: object
   models.LoginRequest:
     properties:
@@ -40,30 +175,135 @@ definitions:
     - name
     - password
     type: object
-  models.User:
+  models.ReorderFieldItem:
     properties:
-      created_at:
+      field_id:
         type: string
-      email:
+      order_global:
+        type: integer
+      order_in_section:
+        type: integer
+      section_id:
         type: string
-      id:
+    required:
+    - field_id
+    - order_global
+    type: object
+  models.ReorderFieldsRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/models.ReorderFieldItem'
+        minItems: 1
+        type: array
+    required:
+    - items
+    type: object
+  models.ResumeQuizRequest:
+    properties:
+      session_token:
         type: string
-      name:
+    required:
+    - session_token
+    type: object
+  models.StartQuizRequest:
+    properties:
+      access_token:
         type: string
-      updated_at:
+    required:
+    - access_token
+    type: object
+  models.SubmitAnswerItem:
+    properties:
+      answer_value:
+        type: object
+      field_id:
         type: string
+    required:
+    - answer_value
+    - field_id
+    type: object
+  models.SubmitQuizRequest:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/models.SubmitAnswerItem'
+        type: array
+    required:
+    - answers
+    type: object
+  models.UpdateFieldRequest:
+    properties:
+      answer_key:
+        type: object
+      description:
+        type: string
+      is_required:
+        type: boolean
+      label:
+        type: string
+      order_global:
+        type: integer
+      order_in_section:
+        type: integer
+      points:
+        type: integer
+      section_id:
+        type: string
+    type: object
+  models.UpdateFormRequest:
+    properties:
+      description:
+        type: string
+      passing_score:
+        type: integer
+      show_correct_answers:
+        type: boolean
+      shuffle_questions:
+        type: boolean
+      time_limit_minutes:
+        type: integer
+      title:
+        type: string
+    type: object
+  models.UpdateSectionRequest:
+    properties:
+      description:
+        type: string
+      order_global:
+        type: integer
+      prerequisite_section_id:
+        type: string
+      title:
+        type: string
+      visibility_type:
+        enum:
+        - always
+        - after_section
+        type: string
+    type: object
+  models.UpdateWhitelistRequest:
+    properties:
+      expires_at:
+        description: RFC3339 format
+        type: string
+      max_attempts:
+        minimum: 1
+        type: integer
+      metadata:
+        type: object
     type: object
 host: localhost:8080
 info:
   contact:
-    email: support@memotoko.com
+    email: support@form.com
     name: API Support
-  description: API for MemoToko application with JWT authentication
+  description: API for form application with JWT authentication
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
   termsOfService: http://swagger.io/terms/
-  title: MemoToko API
+  title: form API
   version: "1.0"
 paths:
   /auth/login:
@@ -84,23 +324,61 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.AuthResponse'
+            $ref: '#/definitions/models.APIResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/models.APIResponse'
         "401":
           description: Unauthorized
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/models.APIResponse'
       summary: Login user
       tags:
       - auth
-  /auth/refresh_token:
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Invalidate tokens (client-side mainly)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout user
+      tags:
+      - auth
+  /auth/me:
+    get:
+      consumes:
+      - application/json
+      description: Get the current authenticated user's information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get current user
+      tags:
+      - auth
+  /auth/refresh:
     post:
       consumes:
       - application/json
@@ -118,19 +396,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.AuthResponse'
+            $ref: '#/definitions/models.APIResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/models.APIResponse'
         "401":
           description: Unauthorized
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/models.APIResponse'
       summary: Refresh access token
       tags:
       - auth
@@ -152,16 +426,1250 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.AuthResponse'
+            $ref: '#/definitions/models.APIResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/models.APIResponse'
       summary: Register a new user
       tags:
       - auth
+  /forms:
+    get:
+      consumes:
+      - application/json
+      description: Get all forms created by current user (paginated)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: per_page
+        type: integer
+      - default: modified
+        description: Sort by (created or modified)
+        in: query
+        name: sort_by
+        type: string
+      - default: desc
+        description: Sort order (asc or desc)
+        in: query
+        name: order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all user forms
+      tags:
+      - forms
+    post:
+      consumes:
+      - application/json
+      description: Create a new form (survey or quiz)
+      parameters:
+      - description: Create form request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateFormRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new form
+      tags:
+      - forms
+  /forms/{form_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete form (soft delete)
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete form
+      tags:
+      - forms
+    get:
+      consumes:
+      - application/json
+      description: Get form details with all sections and fields
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get form details
+      tags:
+      - forms
+    put:
+      consumes:
+      - application/json
+      description: Update form settings (partial update)
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Update form request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateFormRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update form settings
+      tags:
+      - forms
+  /forms/{form_id}/duplicate:
+    post:
+      consumes:
+      - application/json
+      description: Create a copy of form with all settings and questions
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Duplicate form request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.DuplicateFormRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Duplicate form
+      tags:
+      - forms
+  /forms/{form_id}/fields:
+    get:
+      consumes:
+      - application/json
+      description: Get all fields in form (ordered by order_global)
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: List all fields
+      tags:
+      - fields
+    post:
+      consumes:
+      - application/json
+      description: Add question or content to form
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Create field request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateFieldRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new field
+      tags:
+      - fields
+  /forms/{form_id}/fields/{field_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete field (associated answers also deleted)
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Field ID
+        in: path
+        name: field_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete field
+      tags:
+      - fields
+    get:
+      consumes:
+      - application/json
+      description: Get single field details
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Field ID
+        in: path
+        name: field_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get field details
+      tags:
+      - fields
+    put:
+      consumes:
+      - application/json
+      description: Update field/question details
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Field ID
+        in: path
+        name: field_id
+        required: true
+        type: string
+      - description: Update field request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateFieldRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update field
+      tags:
+      - fields
+  /forms/{form_id}/fields/reorder:
+    patch:
+      consumes:
+      - application/json
+      description: Reorder fields (change order_global and section assignments)
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Reorder fields request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ReorderFieldsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Reorder fields
+      tags:
+      - fields
+  /forms/{form_id}/publish:
+    patch:
+      consumes:
+      - application/json
+      description: Publish form (make it available for respondents)
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Publish form
+      tags:
+      - forms
+  /forms/{form_id}/sections:
+    get:
+      consumes:
+      - application/json
+      description: Get all sections in a form (ordered by order_global)
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: List all sections
+      tags:
+      - sections
+    post:
+      consumes:
+      - application/json
+      description: Add a new section to a form
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Create section request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateSectionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new section
+      tags:
+      - sections
+  /forms/{form_id}/sections/{section_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete section (fields will have section_id set to NULL)
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Section ID
+        in: path
+        name: section_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete section
+      tags:
+      - sections
+    get:
+      consumes:
+      - application/json
+      description: Get section details with all its fields
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Section ID
+        in: path
+        name: section_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get section details
+      tags:
+      - sections
+    put:
+      consumes:
+      - application/json
+      description: Update section details
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Section ID
+        in: path
+        name: section_id
+        required: true
+        type: string
+      - description: Update section request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateSectionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update section
+      tags:
+      - sections
+  /forms/{form_id}/whitelist:
+    get:
+      description: Get all whitelist entries for form (paginated)
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: per_page
+        type: integer
+      - default: created
+        description: 'Sort by: ''created'' or ''name'''
+        in: query
+        name: sort_by
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: List whitelist entries
+      tags:
+      - whitelist
+    post:
+      consumes:
+      - application/json
+      description: Add single respondent access (usually from CRM)
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Create whitelist request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateWhitelistRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create whitelist entry
+      tags:
+      - whitelist
+  /forms/{form_id}/whitelist/{whitelist_id}:
+    delete:
+      description: Revoke access (prevent further quiz attempts)
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Whitelist ID
+        in: path
+        name: whitelist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Revoke whitelist entry
+      tags:
+      - whitelist
+    get:
+      description: Get single whitelist entry details
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Whitelist ID
+        in: path
+        name: whitelist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get whitelist entry
+      tags:
+      - whitelist
+    put:
+      consumes:
+      - application/json
+      description: Update whitelist entry (extend expiry, adjust attempts)
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Whitelist ID
+        in: path
+        name: whitelist_id
+        required: true
+        type: string
+      - description: Update whitelist request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateWhitelistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update whitelist entry
+      tags:
+      - whitelist
+  /forms/{form_id}/whitelist/batch:
+    post:
+      consumes:
+      - application/json
+      description: Bulk add multiple respondents (CRM integration)
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Batch create whitelist request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.BatchCreateWhitelistRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Batch create whitelist entries
+      tags:
+      - whitelist
+  /quiz/{session_id}/autosave:
+    post:
+      consumes:
+      - application/json
+      description: Save in-progress answer (debounced)
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: string
+      - description: Auto-save answer request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.AutoSaveAnswerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Auto-save answer
+      tags:
+      - quiz
+  /quiz/{session_id}/content:
+    get:
+      description: Get quiz questions for display
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get quiz content
+      tags:
+      - quiz
+  /quiz/{session_id}/status:
+    get:
+      description: Check session status (time remaining, saved answers)
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get session status
+      tags:
+      - quiz
+  /quiz/{session_id}/submit:
+    post:
+      consumes:
+      - application/json
+      description: Submit completed quiz/survey
+      parameters:
+      - description: Session ID
+        in: path
+        name: session_id
+        required: true
+        type: string
+      - description: Submit quiz request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.SubmitQuizRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Submit quiz
+      tags:
+      - quiz
+  /quiz/result/{response_id}:
+    get:
+      description: Get quiz result and score (if quiz mode)
+      parameters:
+      - description: Response ID
+        in: path
+        name: response_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get quiz result
+      tags:
+      - quiz
+  /quiz/resume:
+    post:
+      consumes:
+      - application/json
+      description: Resume incomplete quiz (after disconnect)
+      parameters:
+      - description: Resume quiz request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ResumeQuizRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      summary: Resume quiz session
+      tags:
+      - quiz
+  /quiz/start:
+    post:
+      consumes:
+      - application/json
+      description: Initiate quiz session with whitelist token - No authentication
+        required
+      parameters:
+      - description: Start quiz request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.StartQuizRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      summary: Start quiz session
+      tags:
+      - quiz
+  /whitelist/validate/{access_token}:
+    get:
+      description: Check if token is valid (used by quiz taker) - No authentication
+        required
+      parameters:
+      - description: Access Token
+        in: path
+        name: access_token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      summary: Validate access token
+      tags:
+      - whitelist
 schemes:
 - http
 - https

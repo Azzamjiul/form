@@ -5,24 +5,24 @@ import (
 	"log"
 	"net/http"
 
-	"memotoko-api/config"
-	_ "memotoko-api/docs"
-	"memotoko-api/handlers"
-	"memotoko-api/services"
-	"memotoko-api/utils"
+	"form-api/config"
+	_ "form-api/docs"
+	"form-api/handlers"
+	"form-api/services"
+	"form-api/utils"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
 	"gorm.io/gorm"
 )
 
-// @title MemoToko API
+// @title form API
 // @version 1.0
-// @description API for MemoToko application with JWT authentication
+// @description API for form application with JWT authentication
 // @termsOfService http://swagger.io/terms/
 
 // @contact.name API Support
-// @contact.email support@memotoko.com
+// @contact.email support@form.com
 
 // @license.name MIT
 // @license.url https://opensource.org/licenses/MIT

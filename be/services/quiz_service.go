@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"memotoko-api/models"
+	"form-api/models"
 	"time"
 
 	"github.com/google/uuid"
@@ -576,7 +576,7 @@ func (s *QuizService) checkAnswerCorrectness(fieldID uuid.UUID, userAnswer datat
 
 	// Parse answer key
 	var answerKey map[string]interface{}
-	if err := json.Unmarshal(*field.AnswerKey, &answerKey); err != nil {
+	if err := json.Unmarshal(field.AnswerKey, &answerKey); err != nil {
 		return false, 0
 	}
 

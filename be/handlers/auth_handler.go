@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"memotoko-api/models"
-	"memotoko-api/services"
+	"form-api/models"
+	"form-api/services"
 
 	"github.com/gin-gonic/gin"
 )

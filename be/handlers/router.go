@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"memotoko-api/middleware"
-	"memotoko-api/utils"
+	"form-api/middleware"
+	"form-api/utils"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"

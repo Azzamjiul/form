@@ -35,7 +35,7 @@ export const Sidebar = () => {
       {/* Header */}
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
         {!isCollapsed && (
-          <h2 className="text-xl font-bold text-gray-800">MemoToko</h2>
+          <h2 className="text-xl font-bold text-gray-800">form</h2>
         )}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}

@@ -1,6 +1,6 @@
-# MemoToko Frontend
+# form Frontend
 
-Modern React + TypeScript frontend for the MemoToko application with complete authentication integration.
+Modern React + TypeScript frontend for the form application with complete authentication integration.
 
 ## 🚀 Quick Start
 

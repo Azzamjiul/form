@@ -1,4 +1,4 @@
-module memotoko-api
+module form-api
 
 go 1.24.0
 
