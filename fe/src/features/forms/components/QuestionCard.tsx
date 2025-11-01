@@ -39,9 +39,14 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   const [title, setTitle] = useState(item.title);
   const [description, setDescription] = useState(item.description);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
+  const [showAnswerKey, setShowAnswerKey] = useState(false);
   // const [showScaleDialog, setShowScaleDialog] = useState(false); // TODO: Implement scale dialog
   const [scaleMin, setScaleMin] = useState(1);
   const [scaleMax, setScaleMax] = useState(5);
+  const [points, setPoints] = useState(item.points || 0);
+
+  // Answer key state
+  const [newAcceptableAnswer, setNewAcceptableAnswer] = useState('');
 
   const questionType = item.questionType || 'text';
 
@@ -132,6 +137,55 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     };
 
     onUpdate({ answerKey: newAnswerKey });
+  };
+
+  const handleAddAcceptableAnswer = () => {
+    if (!newAcceptableAnswer.trim()) return;
+
+    const currentAnswerKey = item.answerKey as any;
+    const acceptableAnswers = currentAnswerKey?.acceptable_answers || [];
+
+    const newAnswerKey: AnswerKey = {
+      type: 'text',
+      case_sensitive: currentAnswerKey?.case_sensitive || false,
+      acceptable_answers: [...acceptableAnswers, newAcceptableAnswer.trim()],
+      trim_whitespace: currentAnswerKey?.trim_whitespace !== false
+    };
+
+    onUpdate({ answerKey: newAnswerKey });
+    setNewAcceptableAnswer('');
+  };
+
+  const handleRemoveAcceptableAnswer = (index: number) => {
+    const currentAnswerKey = item.answerKey as any;
+    const acceptableAnswers = currentAnswerKey?.acceptable_answers || [];
+
+    const newAnswerKey: AnswerKey = {
+      type: 'text',
+      case_sensitive: currentAnswerKey?.case_sensitive || false,
+      acceptable_answers: acceptableAnswers.filter((_: string, i: number) => i !== index),
+      trim_whitespace: currentAnswerKey?.trim_whitespace !== false
+    };
+
+    onUpdate({ answerKey: newAnswerKey });
+  };
+
+  const handleToggleCaseSensitive = () => {
+    const currentAnswerKey = item.answerKey as any;
+
+    const newAnswerKey: AnswerKey = {
+      type: 'text',
+      case_sensitive: !(currentAnswerKey?.case_sensitive || false),
+      acceptable_answers: currentAnswerKey?.acceptable_answers || [],
+      trim_whitespace: currentAnswerKey?.trim_whitespace !== false
+    };
+
+    onUpdate({ answerKey: newAnswerKey });
+  };
+
+  const handlePointsChange = (newPoints: number) => {
+    setPoints(newPoints);
+    onUpdate({ points: newPoints });
   };
 
 
@@ -482,6 +536,104 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         {renderQuestionContent()}
       </div>
 
+      {/* Answer Key Section for Text Questions - Collapsible */}
+      {(questionType === 'text' || questionType === 'paragraph') && (
+        <div className="mt-4">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowAnswerKey(!showAnswerKey);
+            }}
+            className="flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 font-medium mb-2"
+          >
+            <svg
+              className="w-4 h-4 transition-transform"
+              style={{ transform: showAnswerKey ? 'rotate(90deg)' : 'rotate(0deg)' }}
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+            </svg>
+            <span>Answer Key</span>
+          </button>
+
+          {showAnswerKey && (
+            <div className="space-y-3 pl-6 pb-2">
+              {/* Case Sensitive Toggle */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id={`case-sensitive-${item.id}`}
+                  checked={(item.answerKey as any)?.case_sensitive || false}
+                  onChange={handleToggleCaseSensitive}
+                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                />
+                <label htmlFor={`case-sensitive-${item.id}`} className="text-sm text-gray-700">
+                  Case sensitive
+                </label>
+              </div>
+
+              {/* Acceptable Answers List */}
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-2 block">
+                  Acceptable Answers
+                </label>
+                <div className="space-y-1.5">
+                  {((item.answerKey as any)?.acceptable_answers || []).map((answer: string, index: number) => (
+                    <div key={index} className="flex items-center gap-2 bg-green-50 border border-green-200 rounded px-2 py-1.5">
+                      <span className="flex-1 text-sm text-gray-700">{answer}</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveAcceptableAnswer(index);
+                        }}
+                        className="p-0.5 flex items-center justify-center text-gray-400 hover:text-red-500"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Add New Answer */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newAcceptableAnswer}
+                  onChange={(e) => setNewAcceptableAnswer(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.stopPropagation();
+                      handleAddAcceptableAnswer();
+                    }
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  placeholder="Add acceptable answer..."
+                  className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddAcceptableAnswer();
+                  }}
+                  disabled={!newAcceptableAnswer.trim()}
+                  className="px-3 py-1.5 bg-purple-600 text-white rounded text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Add
+                </button>
+              </div>
+
+              <p className="text-xs text-gray-500 italic">
+                Students can provide any of these answers to get full credit.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Bottom Actions Bar */}
       <div
         className="flex items-center justify-between pt-4 border-t border-gray-200"
@@ -526,7 +678,20 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* Points Input */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-600">Points:</label>
+            <input
+              type="number"
+              value={points}
+              onChange={(e) => handlePointsChange(Number(e.target.value))}
+              onClick={(e) => e.stopPropagation()}
+              min="0"
+              className="w-16 px-2 py-1 border border-gray-300 rounded text-sm text-center focus:outline-none focus:ring-1 focus:ring-purple-500"
+            />
+          </div>
+          <div className="w-px h-6 bg-gray-300"></div>
           <button
             className="p-2 flex items-center justify-center bg-transparent border-none cursor-pointer rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
             onClick={() => {
