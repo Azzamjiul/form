@@ -118,8 +118,55 @@ export interface FormListParams {
   order?: 'asc' | 'desc';
 }
 
+// Section Request types
+export interface CreateSectionRequest {
+  title: string;
+  description?: string;
+  order_global: number;
+  visibility_type: 'always' | 'after_section';
+  prerequisite_section_id?: string;
+}
+
+export interface UpdateSectionRequest {
+  title?: string;
+  description?: string;
+  order_global?: number;
+  visibility_type?: 'always' | 'after_section';
+  prerequisite_section_id?: string;
+}
+
+// Section Response types
+export interface SectionDetail {
+  section_id: string;
+  form_id: string;
+  title: string;
+  description?: string;
+  order_global: number;
+  visibility_type: string;
+  prerequisite_section_id?: string;
+  created_at: string;
+  updated_at: string;
+  fields?: FormField[];
+}
+
+export interface SectionSummary {
+  section_id: string;
+  title: string;
+  description?: string;
+  order_global: number;
+  visibility_type: string;
+  prerequisite_section_id?: string;
+  fields_count: number;
+}
+
+export interface SectionListData {
+  sections: SectionSummary[];
+}
+
 // Response types
 export type FormResponse = APIResponse<Form>;
 export type FormWithSectionsResponse = APIResponse<FormWithSections>;
 export type FormListResponse = APIResponse<FormListData>;
 export type PublishFormResponse = APIResponse<PublishFormData>;
+export type SectionDetailResponse = APIResponse<SectionDetail>;
+export type SectionListResponse = APIResponse<SectionListData>;

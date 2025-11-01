@@ -12,16 +12,18 @@ import (
 )
 
 type Router struct {
-	authHandler *AuthHandler
-	formHandler *FormHandler
-	jwtUtil     *utils.JWTUtil
+	authHandler    *AuthHandler
+	formHandler    *FormHandler
+	sectionHandler *SectionHandler
+	jwtUtil        *utils.JWTUtil
 }
 
-func NewRouter(authHandler *AuthHandler, formHandler *FormHandler, jwtUtil *utils.JWTUtil) *Router {
+func NewRouter(authHandler *AuthHandler, formHandler *FormHandler, sectionHandler *SectionHandler, jwtUtil *utils.JWTUtil) *Router {
 	return &Router{
-		authHandler: authHandler,
-		formHandler: formHandler,
-		jwtUtil:     jwtUtil,
+		authHandler:    authHandler,
+		formHandler:    formHandler,
+		sectionHandler: sectionHandler,
+		jwtUtil:        jwtUtil,
 	}
 }
 
@@ -52,6 +54,13 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 			forms.DELETE("/:form_id", r.formHandler.DeleteForm)
 			forms.POST("/:form_id/duplicate", r.formHandler.DuplicateForm)
 			forms.PATCH("/:form_id/publish", r.formHandler.PublishForm)
+
+			// Section routes (nested under forms)
+			forms.POST("/:form_id/sections", r.sectionHandler.CreateSection)
+			forms.GET("/:form_id/sections", r.sectionHandler.ListSections)
+			forms.GET("/:form_id/sections/:section_id", r.sectionHandler.GetSection)
+			forms.PUT("/:form_id/sections/:section_id", r.sectionHandler.UpdateSection)
+			forms.DELETE("/:form_id/sections/:section_id", r.sectionHandler.DeleteSection)
 		}
 	}
 
