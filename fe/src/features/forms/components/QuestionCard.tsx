@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { type CanvasItem } from '../types';
+import { type CanvasItem, type AnswerKey } from '../types';
 import { RichTextEditor } from '../../../components/RichTextEditor';
 
 interface QuestionCardProps {
@@ -47,9 +47,14 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   const [title, setTitle] = useState(item.title);
   const [description, setDescription] = useState(item.description);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
+  const [showAnswerKey, setShowAnswerKey] = useState(false);
   // const [showScaleDialog, setShowScaleDialog] = useState(false); // TODO: Implement scale dialog
   const [scaleMin, setScaleMin] = useState(1);
   const [scaleMax, setScaleMax] = useState(5);
+  const [points, setPoints] = useState(item.points || 0);
+
+  // Answer key state
+  const [newAcceptableAnswer, setNewAcceptableAnswer] = useState('');
 
   const questionType = item.questionType || 'text';
 
@@ -112,6 +117,79 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     }
   };
 
+  // Answer Key Handlers
+  const handleToggleCorrectOption = (optionId: string) => {
+    const currentAnswerKey = item.answerKey as any;
+    const correctOptions = currentAnswerKey?.correct_options || [];
+
+    let newCorrectOptions: string[];
+    if (questionType === 'multiple_choice') {
+      // Single selection - replace
+      newCorrectOptions = correctOptions.includes(optionId) ? [] : [optionId];
+    } else {
+      // Multiple selection (checkbox) - toggle
+      newCorrectOptions = correctOptions.includes(optionId)
+        ? correctOptions.filter((id: string) => id !== optionId)
+        : [...correctOptions, optionId];
+    }
+
+    const newAnswerKey: AnswerKey = {
+      type: questionType as any,
+      correct_options: newCorrectOptions
+    };
+
+    onUpdate({ answerKey: newAnswerKey });
+  };
+
+  const handleAddAcceptableAnswer = () => {
+    if (!newAcceptableAnswer.trim()) return;
+
+    const currentAnswerKey = item.answerKey as any;
+    const acceptableAnswers = currentAnswerKey?.acceptable_answers || [];
+
+    const newAnswerKey: AnswerKey = {
+      type: 'text',
+      case_sensitive: currentAnswerKey?.case_sensitive || false,
+      acceptable_answers: [...acceptableAnswers, newAcceptableAnswer.trim()],
+      trim_whitespace: currentAnswerKey?.trim_whitespace !== false
+    };
+
+    onUpdate({ answerKey: newAnswerKey });
+    setNewAcceptableAnswer('');
+  };
+
+  const handleRemoveAcceptableAnswer = (index: number) => {
+    const currentAnswerKey = item.answerKey as any;
+    const acceptableAnswers = currentAnswerKey?.acceptable_answers || [];
+
+    const newAnswerKey: AnswerKey = {
+      type: 'text',
+      case_sensitive: currentAnswerKey?.case_sensitive || false,
+      acceptable_answers: acceptableAnswers.filter((_: string, i: number) => i !== index),
+      trim_whitespace: currentAnswerKey?.trim_whitespace !== false
+    };
+
+    onUpdate({ answerKey: newAnswerKey });
+  };
+
+  const handleToggleCaseSensitive = () => {
+    const currentAnswerKey = item.answerKey as any;
+
+    const newAnswerKey: AnswerKey = {
+      type: 'text',
+      case_sensitive: !(currentAnswerKey?.case_sensitive || false),
+      acceptable_answers: currentAnswerKey?.acceptable_answers || [],
+      trim_whitespace: currentAnswerKey?.trim_whitespace !== false
+    };
+
+    onUpdate({ answerKey: newAnswerKey });
+  };
+
+  const handlePointsChange = (newPoints: number) => {
+    setPoints(newPoints);
+    onUpdate({ points: newPoints });
+  };
+
 
   // Render question content preview
   const renderQuestionContent = () => {
@@ -131,29 +209,46 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         );
 
       case 'multiple_choice':
+        const mcAnswerKey = item.answerKey as any;
+        const mcCorrectOptions = mcAnswerKey?.correct_options || [];
         return (
           <div className="space-y-3">
-            {item.options?.map((option) => (
-              <div key={option.id} className="flex items-center gap-3 group p-2 rounded hover:bg-gray-50">
-                <div className="w-6 h-6 border-2 border-gray-300 rounded-full flex-shrink-0" />
-                <input
-                  type="text"
-                  value={option.label}
-                  onChange={(e) => handleOptionChange(option.id, e.target.value)}
-                  className="flex-1 text-sm text-gray-700 border-b border-transparent hover:border-gray-300 focus:border-purple-600 outline-none bg-transparent"
-                  placeholder="Option"
-                />
-                <button
-                  className="opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500"
-                  onClick={() => handleDeleteOption(option.id)}
-                  disabled={item.options?.length === 2}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            ))}
+            {item.options?.map((option) => {
+              const isCorrect = mcCorrectOptions.includes(option.id);
+              return (
+                <div key={option.id} className="flex items-center gap-3 group p-2 rounded hover:bg-gray-50">
+                  <div
+                    className={`w-6 h-6 border-2 rounded-full flex-shrink-0 cursor-pointer flex items-center justify-center transition-colors ${
+                      isCorrect ? 'border-green-500 bg-green-50' : 'border-gray-300'
+                    }`}
+                    onClick={() => handleToggleCorrectOption(option.id)}
+                    title={isCorrect ? 'Correct answer' : 'Mark as correct'}
+                  >
+                    {isCorrect && (
+                      <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    value={option.label}
+                    onChange={(e) => handleOptionChange(option.id, e.target.value)}
+                    className="flex-1 text-sm text-gray-700 border-b border-transparent hover:border-gray-300 focus:border-purple-600 outline-none bg-transparent"
+                    placeholder="Option"
+                  />
+                  <button
+                    className="opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500"
+                    onClick={() => handleDeleteOption(option.id)}
+                    disabled={item.options?.length === 2}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              );
+            })}
             <button
               className="flex items-center gap-3 mt-3 text-purple-600 hover:text-purple-700 text-sm font-medium"
               onClick={handleAddOption}
@@ -165,29 +260,46 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         );
 
       case 'checkbox':
+        const cbAnswerKey = item.answerKey as any;
+        const cbCorrectOptions = cbAnswerKey?.correct_options || [];
         return (
           <div className="space-y-3">
-            {item.options?.map((option) => (
-              <div key={option.id} className="flex items-center gap-3 group p-2 rounded hover:bg-gray-50">
-                <div className="w-6 h-6 border-2 border-gray-300 rounded flex-shrink-0" />
-                <input
-                  type="text"
-                  value={option.label}
-                  onChange={(e) => handleOptionChange(option.id, e.target.value)}
-                  className="flex-1 text-sm text-gray-700 border-b border-transparent hover:border-gray-300 focus:border-purple-600 outline-none bg-transparent"
-                  placeholder="Option"
-                />
-                <button
-                  className="opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500"
-                  onClick={() => handleDeleteOption(option.id)}
-                  disabled={item.options?.length === 2}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            ))}
+            {item.options?.map((option) => {
+              const isCorrect = cbCorrectOptions.includes(option.id);
+              return (
+                <div key={option.id} className="flex items-center gap-3 group p-2 rounded hover:bg-gray-50">
+                  <div
+                    className={`w-6 h-6 border-2 rounded flex-shrink-0 cursor-pointer flex items-center justify-center transition-colors ${
+                      isCorrect ? 'border-green-500 bg-green-50' : 'border-gray-300'
+                    }`}
+                    onClick={() => handleToggleCorrectOption(option.id)}
+                    title={isCorrect ? 'Correct answer' : 'Mark as correct'}
+                  >
+                    {isCorrect && (
+                      <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    value={option.label}
+                    onChange={(e) => handleOptionChange(option.id, e.target.value)}
+                    className="flex-1 text-sm text-gray-700 border-b border-transparent hover:border-gray-300 focus:border-purple-600 outline-none bg-transparent"
+                    placeholder="Option"
+                  />
+                  <button
+                    className="opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500"
+                    onClick={() => handleDeleteOption(option.id)}
+                    disabled={item.options?.length === 2}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              );
+            })}
             <button
               className="flex items-center gap-3 mt-3 text-purple-600 hover:text-purple-700 text-sm font-medium"
               onClick={handleAddOption}
@@ -451,6 +563,106 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       {/* Question Content Preview */}
       <div className="mb-4">
         {renderQuestionContent()}
+      </div>
+
+      {/* Answer Key Section for Text Questions */}
+      {(questionType === 'text' || questionType === 'paragraph') && (
+        <div className="mb-4 border border-gray-200 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 className="text-sm font-semibold text-gray-800">Answer Key</h3>
+            </div>
+            <button
+              onClick={() => setShowAnswerKey(!showAnswerKey)}
+              className="text-xs text-purple-600 hover:text-purple-700 font-medium"
+            >
+              {showAnswerKey ? 'Hide' : 'Show'}
+            </button>
+          </div>
+
+          {showAnswerKey && (
+            <div className="space-y-3">
+              {/* Case Sensitive Toggle */}
+              <div className="flex items-center gap-3">
+                <button
+                  className={`w-12 h-6 rounded-full border-none cursor-pointer relative transition-colors ${
+                    (item.answerKey as any)?.case_sensitive ? 'bg-purple-600' : 'bg-gray-300'
+                  }`}
+                  onClick={handleToggleCaseSensitive}
+                >
+                  <span
+                    className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all ${
+                      (item.answerKey as any)?.case_sensitive ? 'left-6' : 'left-0.5'
+                    }`}
+                  />
+                </button>
+                <span className="text-sm text-gray-700">Case sensitive</span>
+              </div>
+
+              {/* Acceptable Answers List */}
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-2 block">
+                  Acceptable Answers
+                </label>
+                <div className="space-y-2">
+                  {((item.answerKey as any)?.acceptable_answers || []).map((answer: string, index: number) => (
+                    <div key={index} className="flex items-center gap-2 bg-green-50 border border-green-200 rounded px-3 py-2">
+                      <span className="flex-1 text-sm text-gray-700">{answer}</span>
+                      <button
+                        onClick={() => handleRemoveAcceptableAnswer(index)}
+                        className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-red-500"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Add New Answer */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newAcceptableAnswer}
+                  onChange={(e) => setNewAcceptableAnswer(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddAcceptableAnswer()}
+                  placeholder="Add acceptable answer..."
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+                <button
+                  onClick={handleAddAcceptableAnswer}
+                  disabled={!newAcceptableAnswer.trim()}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Add
+                </button>
+              </div>
+
+              <p className="text-xs text-gray-500 italic">
+                Students can provide any of these answers to get full credit. Leave empty if this is not a quiz question.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Points Field */}
+      <div className="mb-4">
+        <label className="text-sm font-medium text-gray-700 mb-2 block">
+          Points
+        </label>
+        <input
+          type="number"
+          value={points}
+          onChange={(e) => handlePointsChange(Number(e.target.value))}
+          min="0"
+          className="w-24 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+        />
       </div>
 
       {/* Required Toggle and Actions */}

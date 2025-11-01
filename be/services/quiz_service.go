@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"form-api/models"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -586,18 +587,133 @@ func (s *QuizService) checkAnswerCorrectness(fieldID uuid.UUID, userAnswer datat
 		return false, 0
 	}
 
-	// Simple comparison (can be enhanced based on field type)
-	correctAnswer, ok := answerKey["correct_answer"]
+	answerType, ok := answerKey["type"].(string)
 	if !ok {
 		return false, 0
 	}
 
-	userValue, ok := userAns["value"]
-	if !ok {
+	var isCorrect bool
+
+	switch answerType {
+	case "multiple_choice", "checkbox":
+		// Check if user's selected options match correct options
+		correctOptions, ok := answerKey["correct_options"].([]interface{})
+		if !ok {
+			return false, 0
+		}
+
+		userValue, ok := userAns["value"]
+		if !ok {
+			return false, 0
+		}
+
+		// Convert to comparable format
+		correctSet := make(map[string]bool)
+		for _, opt := range correctOptions {
+			if optStr, ok := opt.(string); ok {
+				correctSet[optStr] = true
+			}
+		}
+
+		// Handle both single value (multiple_choice) and array (checkbox)
+		var userOptions []string
+		switch v := userValue.(type) {
+		case string:
+			userOptions = []string{v}
+		case []interface{}:
+			for _, opt := range v {
+				if optStr, ok := opt.(string); ok {
+					userOptions = append(userOptions, optStr)
+				}
+			}
+		}
+
+		// Check if user options match correct options exactly
+		if len(userOptions) != len(correctSet) {
+			isCorrect = false
+		} else {
+			isCorrect = true
+			for _, opt := range userOptions {
+				if !correctSet[opt] {
+					isCorrect = false
+					break
+				}
+			}
+		}
+
+	case "text":
+		// Text answer with case sensitivity and multiple acceptable answers
+		caseSensitive, _ := answerKey["case_sensitive"].(bool)
+		trimWhitespace, _ := answerKey["trim_whitespace"].(bool)
+		if trimWhitespace {
+			trimWhitespace = true // Default to true
+		}
+
+		acceptableAnswers, ok := answerKey["acceptable_answers"].([]interface{})
+		if !ok || len(acceptableAnswers) == 0 {
+			return false, 0
+		}
+
+		userValue, ok := userAns["value"].(string)
+		if !ok {
+			return false, 0
+		}
+
+		if trimWhitespace {
+			userValue = strings.TrimSpace(userValue)
+		}
+
+		isCorrect = false
+		for _, acceptable := range acceptableAnswers {
+			acceptableStr, ok := acceptable.(string)
+			if !ok {
+				continue
+			}
+
+			if trimWhitespace {
+				acceptableStr = strings.TrimSpace(acceptableStr)
+			}
+
+			if caseSensitive {
+				if userValue == acceptableStr {
+					isCorrect = true
+					break
+				}
+			} else {
+				if strings.EqualFold(userValue, acceptableStr) {
+					isCorrect = true
+					break
+				}
+			}
+		}
+
+	case "linear_scale", "rating":
+		// Numeric comparison
+		correctValue, ok := answerKey["correct_value"].(float64)
+		if !ok {
+			// Try int conversion
+			if correctInt, ok := answerKey["correct_value"].(int); ok {
+				correctValue = float64(correctInt)
+			} else {
+				return false, 0
+			}
+		}
+
+		userValue, ok := userAns["value"].(float64)
+		if !ok {
+			// Try int conversion
+			if userInt, ok := userAns["value"].(int); ok {
+				userValue = float64(userInt)
+			} else {
+				return false, 0
+			}
+		}
+
+		isCorrect = correctValue == userValue
+
+	default:
 		return false, 0
 	}
-
-	isCorrect := correctAnswer == userValue
 
 	if isCorrect {
 		return true, float64(field.Points)

@@ -65,6 +65,8 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
             questionType: field.field_type || 'text',
             required: field.is_required || false,
             options: field.options || [],
+            answerKey: field.answer_key as any,
+            points: field.points || 0,
             order: canvasOrder++,
             isEditing: false,
             isSelected: false,
@@ -97,6 +99,8 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
                 questionType: field.field_type || 'text',
                 required: field.is_required || false,
                 options: field.options || [],
+                answerKey: field.answer_key as any,
+                points: field.points || 0,
                 order: canvasOrder++,
                 isEditing: false,
                 isSelected: false,
@@ -169,8 +173,8 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
         label: 'Untitled Question',
         description: '',
         order_global: nextOrder,
-        section_id: null,
-        order_in_section: null,
+        section_id: undefined,
+        order_in_section: undefined,
         is_required: false,
         points: 0,
       };
@@ -225,14 +229,65 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
     );
   }, []);
 
-  // Handle item updates
+  // Debounced field update to backend
+  const saveFieldToBackend = useCallback(async (fieldId: string, updates: Partial<CanvasItem>) => {
+    try {
+      const updatePayload: any = {};
+
+      if (updates.title !== undefined) updatePayload.label = updates.title;
+      if (updates.description !== undefined) updatePayload.description = updates.description;
+      if (updates.required !== undefined) updatePayload.is_required = updates.required;
+      if (updates.questionType !== undefined) updatePayload.field_type = updates.questionType;
+      if (updates.options !== undefined) updatePayload.options = updates.options;
+      if (updates.answerKey !== undefined) updatePayload.answer_key = updates.answerKey;
+      if (updates.points !== undefined) updatePayload.points = updates.points;
+
+      await fieldsApi.updateField(formId, fieldId, updatePayload);
+      setHasUnsavedChanges(false);
+    } catch (error) {
+      console.error('Failed to update field:', error);
+    }
+  }, [formId]);
+
+  // Debounce timer ref
+  const updateTimersRef = React.useRef<Map<string, number>>(new Map());
+
+  // Handle item updates with auto-save
   const handleUpdateItem = useCallback((itemId: string, updates: Partial<CanvasItem>) => {
+    // Update local state immediately
     setItems(prevItems =>
       prevItems.map(item =>
         item.id === itemId ? { ...item, ...updates } : item
       )
     );
     setHasUnsavedChanges(true);
+
+    // Skip auto-save for non-field items
+    if (itemId === 'survey-header' || itemId.startsWith('section-') || itemId.startsWith('page-break-')) {
+      return;
+    }
+
+    // Clear existing timer for this item
+    const existingTimer = updateTimersRef.current.get(itemId);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+    }
+
+    // Set new debounced save timer (2 seconds)
+    const newTimer = setTimeout(() => {
+      saveFieldToBackend(itemId, updates);
+      updateTimersRef.current.delete(itemId);
+    }, 2000);
+
+    updateTimersRef.current.set(itemId, newTimer);
+  }, [saveFieldToBackend]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      updateTimersRef.current.forEach((timer) => clearTimeout(timer));
+      updateTimersRef.current.clear();
+    };
   }, []);
 
   // Handle item deletion

@@ -9,6 +9,7 @@ import (
 	"form-api/models"
 
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -394,6 +395,16 @@ func (s *FormService) buildFormWithSectionsResponse(form *models.Form) *models.F
 		fields := make([]models.FieldResponse, 0, len(section.Fields))
 
 		for _, field := range section.Fields {
+			sectionID := section.ID.String()
+			var options *datatypes.JSON
+			if field.Options != nil {
+				options = &field.Options
+			}
+			var answerKey *datatypes.JSON
+			if field.AnswerKey != nil {
+				answerKey = &field.AnswerKey
+			}
+
 			fields = append(fields, models.FieldResponse{
 				FieldID:        field.ID.String(),
 				ContentType:    field.ContentType,
@@ -402,8 +413,11 @@ func (s *FormService) buildFormWithSectionsResponse(form *models.Form) *models.F
 				Description:    field.Description,
 				OrderGlobal:    field.OrderGlobal,
 				OrderInSection: field.OrderInSection,
+				SectionID:      &sectionID,
 				IsRequired:     field.IsRequired,
 				Points:         field.Points,
+				Options:        options,
+				AnswerKey:      answerKey,
 			})
 		}
 
@@ -429,6 +443,15 @@ func (s *FormService) buildFormWithSectionsResponse(form *models.Form) *models.F
 	// Build standalone fields (fields without section_id)
 	standaloneFields := make([]models.FieldResponse, 0, len(form.Fields))
 	for _, field := range form.Fields {
+		var options *datatypes.JSON
+		if field.Options != nil {
+			options = &field.Options
+		}
+		var answerKey *datatypes.JSON
+		if field.AnswerKey != nil {
+			answerKey = &field.AnswerKey
+		}
+
 		standaloneFields = append(standaloneFields, models.FieldResponse{
 			FieldID:        field.ID.String(),
 			ContentType:    field.ContentType,
@@ -439,6 +462,8 @@ func (s *FormService) buildFormWithSectionsResponse(form *models.Form) *models.F
 			OrderInSection: field.OrderInSection,
 			IsRequired:     field.IsRequired,
 			Points:         field.Points,
+			Options:        options,
+			AnswerKey:      answerKey,
 		})
 	}
 

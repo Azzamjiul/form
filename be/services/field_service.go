@@ -77,6 +77,7 @@ func (s *FieldService) CreateField(formID uuid.UUID, req *models.CreateFieldRequ
 		OrderInSection: req.OrderInSection,
 		IsRequired:     isRequired,
 		Points:         points,
+		Options:        s.getOptions(req.Options),
 		AnswerKey:      s.getAnswerKey(req.AnswerKey),
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
@@ -161,6 +162,9 @@ func (s *FieldService) UpdateField(formID uuid.UUID, fieldID uuid.UUID, req *mod
 		if field.ContentType != "section" && field.ContentType != "display_text" {
 			updates["points"] = *req.Points
 		}
+	}
+	if req.Options != nil {
+		updates["options"] = *req.Options
 	}
 	if req.AnswerKey != nil {
 		updates["answer_key"] = *req.AnswerKey
@@ -422,6 +426,13 @@ func (s *FieldService) stringToUUIDPtr(str *string) *uuid.UUID {
 	return &parsed
 }
 
+func (s *FieldService) getOptions(opts *datatypes.JSON) datatypes.JSON {
+	if opts == nil {
+		return nil
+	}
+	return *opts
+}
+
 func (s *FieldService) getAnswerKey(key *datatypes.JSON) datatypes.JSON {
 	if key == nil {
 		return nil
@@ -434,6 +445,11 @@ func (s *FieldService) buildFieldResponse(field *models.FormField) models.FieldR
 	if field.SectionID != nil {
 		id := field.SectionID.String()
 		sectionID = &id
+	}
+
+	var options *datatypes.JSON
+	if field.Options != nil {
+		options = &field.Options
 	}
 
 	var answerKey *datatypes.JSON
@@ -452,6 +468,7 @@ func (s *FieldService) buildFieldResponse(field *models.FormField) models.FieldR
 		SectionID:      sectionID,
 		IsRequired:     field.IsRequired,
 		Points:         field.Points,
+		Options:        options,
 		AnswerKey:      answerKey,
 	}
 }
@@ -461,6 +478,11 @@ func (s *FieldService) buildFieldDetailResponse(field *models.FormField) *models
 	if field.SectionID != nil {
 		id := field.SectionID.String()
 		sectionID = &id
+	}
+
+	var options *datatypes.JSON
+	if field.Options != nil {
+		options = &field.Options
 	}
 
 	var answerKey *datatypes.JSON
@@ -480,6 +502,7 @@ func (s *FieldService) buildFieldDetailResponse(field *models.FormField) *models
 		SectionID:      sectionID,
 		IsRequired:     field.IsRequired,
 		Points:         field.Points,
+		Options:        options,
 		AnswerKey:      answerKey,
 		CreatedAt:      field.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 		UpdatedAt:      field.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),

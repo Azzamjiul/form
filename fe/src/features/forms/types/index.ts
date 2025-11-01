@@ -12,6 +12,41 @@ export interface ErrorData {
   details?: Record<string, any>;
 }
 
+// Answer Key types
+export interface MultipleChoiceAnswerKey {
+  type: 'multiple_choice';
+  correct_options: string[];  // Array of option IDs
+}
+
+export interface CheckboxAnswerKey {
+  type: 'checkbox';
+  correct_options: string[];  // Array of option IDs
+}
+
+export interface TextAnswerKey {
+  type: 'text';
+  case_sensitive: boolean;
+  acceptable_answers: string[];
+  trim_whitespace: boolean;
+}
+
+export interface LinearScaleAnswerKey {
+  type: 'linear_scale';
+  correct_value: number;
+}
+
+export interface RatingAnswerKey {
+  type: 'rating';
+  correct_value: number;
+}
+
+export type AnswerKey =
+  | MultipleChoiceAnswerKey
+  | CheckboxAnswerKey
+  | TextAnswerKey
+  | LinearScaleAnswerKey
+  | RatingAnswerKey;
+
 // Form types
 export interface Form {
   form_id: string;
@@ -63,6 +98,7 @@ export interface FormField {
   is_required: boolean;
   points: number;
   options?: Array<{ id: string; label: string }>;
+  answer_key?: AnswerKey;
 }
 
 export interface FormContentItem {
@@ -513,6 +549,8 @@ export interface CanvasItem {
   questionType?: string;
   required?: boolean;
   options?: Array<{ id: string; label: string }>;
+  answerKey?: AnswerKey;
+  points?: number;
   sectionNumber?: number;
   totalSections?: number;
   order: number;

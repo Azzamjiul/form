@@ -238,3 +238,4 @@ swag init
 - **GORM Soft Deletes**: Query with `WHERE deleted_at IS NULL` to exclude soft-deleted records
 - **Session Expiry**: Quiz sessions auto-submit when time expires (handled client-side by `QuizTimer`)
 - **Metadata Fields**: Use `datatypes.JSON` type for flexible JSON storage (whitelist metadata, answer values)
+- kalo mau test cukup build aja, buat testing aku test lgsg sneidiri jadi ga perlu jalanin fe dan be server buat testing

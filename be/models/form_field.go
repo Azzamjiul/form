@@ -19,6 +19,7 @@ type FormField struct {
 	OrderInSection  *int            `gorm:"type:integer" json:"order_in_section,omitempty"`
 	IsRequired      bool            `gorm:"not null;default:false" json:"is_required"`
 	Points          int             `gorm:"not null;default:0" json:"points"`
+	Options         datatypes.JSON  `gorm:"type:jsonb" json:"options,omitempty"`
 	AnswerKey       datatypes.JSON  `gorm:"type:jsonb" json:"answer_key,omitempty"`
 	CreatedAt       time.Time       `gorm:"not null;default:now();index:idx_form_fields_created_at" json:"created_at"`
 	UpdatedAt       time.Time       `gorm:"not null;default:now()" json:"updated_at"`

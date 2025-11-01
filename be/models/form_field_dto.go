@@ -14,6 +14,7 @@ type CreateFieldRequest struct {
 	SectionID      *string         `json:"section_id"`
 	IsRequired     *bool           `json:"is_required"`
 	Points         *int            `json:"points"`
+	Options        *datatypes.JSON `json:"options" swaggertype:"object"`
 	AnswerKey      *datatypes.JSON `json:"answer_key" swaggertype:"object"`
 }
 
@@ -22,6 +23,7 @@ type UpdateFieldRequest struct {
 	Description    *string         `json:"description"`
 	IsRequired     *bool           `json:"is_required"`
 	Points         *int            `json:"points"`
+	Options        *datatypes.JSON `json:"options" swaggertype:"object"`
 	AnswerKey      *datatypes.JSON `json:"answer_key" swaggertype:"object"`
 	OrderGlobal    *int            `json:"order_global"`
 	OrderInSection *int            `json:"order_in_section"`
@@ -53,6 +55,7 @@ type FieldDetailResponse struct {
 	SectionID      *string         `json:"section_id,omitempty"`
 	IsRequired     bool            `json:"is_required"`
 	Points         int             `json:"points"`
+	Options        *datatypes.JSON `json:"options,omitempty"`
 	AnswerKey      *datatypes.JSON `json:"answer_key,omitempty"`
 	CreatedAt      string          `json:"created_at"`
 	UpdatedAt      string          `json:"updated_at"`

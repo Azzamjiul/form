@@ -93,6 +93,7 @@ type FieldResponse struct {
 	SectionID      *string         `json:"section_id,omitempty"`
 	IsRequired     bool            `json:"is_required"`
 	Points         int             `json:"points"`
+	Options        *datatypes.JSON `json:"options,omitempty"`
 	AnswerKey      *datatypes.JSON `json:"answer_key,omitempty"`
 }
 
