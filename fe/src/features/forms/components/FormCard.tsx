@@ -1,5 +1,12 @@
 import type { FormSummary } from '../types';
 
+// Helper function to extract plain text from HTML
+const getPlainText = (html: string) => {
+  const div = document.createElement('div');
+  div.innerHTML = html || '';
+  return div.textContent || div.innerText || '';
+};
+
 interface FormCardProps {
   form: FormSummary;
   onDelete?: (formId: string) => void;
@@ -43,9 +50,17 @@ export const FormCard = ({ form, onDelete, onDuplicate, onPublish, onClick }: Fo
     >
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900">{form.title}</h3>
+          <h3
+            className="text-lg font-semibold text-gray-900 line-clamp-2"
+            dangerouslySetInnerHTML={{
+              __html: form.title || '<span class="text-gray-400">Untitled Form</span>'
+            }}
+          />
           {form.description && (
-            <p className="text-sm text-gray-600 mt-1">{form.description}</p>
+            <p
+              className="text-sm text-gray-600 mt-1 line-clamp-2"
+              dangerouslySetInnerHTML={{ __html: form.description }}
+            />
           )}
         </div>
         <span

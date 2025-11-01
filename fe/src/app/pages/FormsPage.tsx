@@ -83,7 +83,15 @@ function FormsContent() {
   const handleDuplicateForm = (formId: string) => {
     const form = data?.data?.forms.find((f) => f.form_id === formId);
     if (form) {
-      const newTitle = prompt('Enter a title for the duplicated form:', `${form.title} - Copy`);
+      // Extract plain text from HTML title for the prompt
+      const getPlainText = (html: string) => {
+        const div = document.createElement('div');
+        div.innerHTML = html || '';
+        return div.textContent || div.innerText || '';
+      };
+
+      const plainTitle = getPlainText(form.title || 'Untitled Form');
+      const newTitle = prompt('Enter a title for the duplicated form:', `${plainTitle} - Copy`);
       if (newTitle) {
         duplicateFormMutation.mutate({ formId, newTitle });
       }
