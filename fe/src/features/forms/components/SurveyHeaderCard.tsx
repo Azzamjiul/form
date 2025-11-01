@@ -112,7 +112,9 @@ export const SurveyHeaderCard: React.FC<SurveyHeaderCardProps> = ({
         ref={titleRef}
         contentEditable
         suppressContentEditableWarning
-        className="outline-none"
+        className={`outline-none transition-all duration-200 ${
+          isSelected ? 'focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 rounded' : ''
+        }`}
         style={{
           fontSize: "32px",
           fontWeight: 400,
@@ -120,7 +122,7 @@ export const SurveyHeaderCard: React.FC<SurveyHeaderCardProps> = ({
           lineHeight: 1.4,
           border: "none",
           borderBottom: "none",
-          padding: "8px 0",
+          padding: "8px",
           background: "transparent",
           fontFamily: "inherit",
           resize: "none",
@@ -153,14 +155,16 @@ export const SurveyHeaderCard: React.FC<SurveyHeaderCardProps> = ({
         ref={descriptionRef}
         contentEditable
         suppressContentEditableWarning
-        className="outline-none"
+        className={`outline-none transition-all duration-200 ${
+          isSelected ? 'focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 rounded' : ''
+        }`}
         style={{
           fontSize: "16px",
           fontWeight: 400,
           color: "#808080",
           border: "none",
           background: "transparent",
-          padding: "8px 0",
+          padding: "8px",
           outline: "none",
           fontFamily: "inherit",
           resize: "none",

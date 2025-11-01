@@ -231,28 +231,29 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
     <div className="flex flex-col" style={{ gap: '24px' }}>
       {sortedItems.map((item, index) => (
         <React.Fragment key={item.id}>
-          {/* Card */}
-          {renderCard(item)}
+          {/* Card with Floating Add Button */}
+          <div className="relative">
+            {renderCard(item)}
 
-          {/* Add Element Section - Only add between cards, not after the last one */}
-          {index < sortedItems.length - 1 && (
-            <AddElementSection
-              onAddQuestion={() => onAddQuestion(item.id)}
-              onAddSection={() => onAddSection(item.id)}
-              isCreating={isCreating}
-            />
-          )}
+            {/* Floating Add Element Section - positioned to the right of focused card */}
+            {selectedItemId === item.id && (
+              <div
+                className="absolute left-full ml-4 z-30"
+                style={{
+                  animation: 'slideInRight 0.2s ease-out',
+                  top: item.type === 'header' ? '40px' : '0px' // Account for header's mt-10 (40px)
+                }}
+              >
+                <AddElementSection
+                  onAddQuestion={() => onAddQuestion(item.id)}
+                  onAddSection={() => onAddSection(item.id)}
+                  isCreating={isCreating}
+                />
+              </div>
+            )}
+          </div>
         </React.Fragment>
       ))}
-
-      {/* Final Add Element Section */}
-      {sortedItems.length > 0 && (
-        <AddElementSection
-          onAddQuestion={() => onAddQuestion(sortedItems[sortedItems.length - 1].id)}
-          onAddSection={() => onAddSection(sortedItems[sortedItems.length - 1].id)}
-          isCreating={isCreating}
-        />
-      )}
 
       {/* Status indicator */}
       {hasUnsavedChanges && (
