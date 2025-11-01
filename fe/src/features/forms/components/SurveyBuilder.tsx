@@ -133,7 +133,7 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
   );
 
   // Handle adding new question
-  const handleAddQuestion = useCallback(async (_afterId?: string) => {
+  const handleAddQuestion = useCallback(async (type: string = 'text', _afterId?: string) => {
     if (isCreating) return;
 
     setIsCreating(true);
@@ -142,11 +142,12 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
 
       const defaultQuestion: CreateFieldRequest = {
         content_type: 'input_field',
-        field_type: 'text',
+        field_type: type,
         label: 'Untitled Question',
         description: '',
         order_global: nextOrder,
-        order_in_section: nextOrder,
+        section_id: null,
+        order_in_section: null,
         is_required: false,
         points: 0,
       };

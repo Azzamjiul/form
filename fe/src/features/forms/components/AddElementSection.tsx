@@ -1,36 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 interface AddElementSectionProps {
-  onAddQuestion: () => void;
+  onAddQuestion: (type?: string) => void;
   onAddSection: () => void;
   isCreating: boolean;
 }
-
-const QUESTION_TYPES = [
-  { value: 'text', label: 'Short answer', icon: 'T' },
-  { value: 'paragraph', label: 'Paragraph', icon: '¶' },
-  { value: 'multiple_choice', label: 'Multiple choice', icon: '◉' },
-  { value: 'checkbox', label: 'Checkboxes', icon: '☐' },
-  { value: 'dropdown', label: 'Dropdown', icon: '▼' },
-  { value: 'linear_scale', label: 'Linear scale', icon: '1―5' },
-  { value: 'rating', label: 'Rating', icon: '★' },
-  { value: 'date', label: 'Date', icon: '📅' },
-  { value: 'time', label: 'Time', icon: '🕐' },
-  { value: 'file_upload', label: 'File upload', icon: '📎' }
-];
 
 export const AddElementSection: React.FC<AddElementSectionProps> = ({
   onAddQuestion,
   onAddSection,
   isCreating
 }) => {
-  const [showQuestionTypes, setShowQuestionTypes] = useState(false);
-
-  const handleAddQuestionType = (type: string) => {
-    setShowQuestionTypes(false);
-    // TODO: Use the selected type
-    console.log('Selected question type:', type);
-    onAddQuestion();
+  const handleAddQuestion = () => {
+    // Default to short answer type
+    onAddQuestion('text');
   };
 
   return (
@@ -45,45 +28,16 @@ export const AddElementSection: React.FC<AddElementSectionProps> = ({
       }}
     >
       {/* Add Question Button */}
-      <div className="relative">
-        <button
-          className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded transition-all duration-200"
-          onClick={() => setShowQuestionTypes(!showQuestionTypes)}
-          disabled={isCreating}
-          title="Add question"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-        </button>
-
-        {/* Question Types Dropdown */}
-        {showQuestionTypes && (
-          <div
-            className="absolute top-full left-full ml-2 bg-white border border-gray-300 rounded-lg shadow-lg z-20 min-w-[200px] max-h-[400px] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-2">
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 border-b">
-                Question Types
-              </div>
-              {QUESTION_TYPES.map((type) => (
-                <button
-                  key={type.value}
-                  className="w-full px-3 py-2 h-10 flex items-center gap-3 text-sm text-gray-700 border-none bg-transparent cursor-pointer hover:bg-gray-100 rounded-md transition-colors"
-                  onClick={() => handleAddQuestionType(type.value)}
-                  disabled={isCreating}
-                >
-                  <span className="w-5 h-5 flex items-center justify-center text-sm text-gray-500">
-                    {type.icon}
-                  </span>
-                  <span>{type.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      <button
+        className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded transition-all duration-200"
+        onClick={handleAddQuestion}
+        disabled={isCreating}
+        title="Add question"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+        </svg>
+      </button>
 
       {/* Add Section Button */}
       <button
@@ -142,13 +96,6 @@ export const AddElementSection: React.FC<AddElementSectionProps> = ({
         </svg>
       </button>
 
-      {/* Click outside to close dropdown */}
-      {showQuestionTypes && (
-        <div
-          className="fixed inset-0 z-10"
-          onClick={() => setShowQuestionTypes(false)}
-        />
-      )}
     </div>
   );
 };

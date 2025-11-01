@@ -15,7 +15,7 @@ interface CenterCanvasProps {
   onSelectItem: (itemId: string) => void;
   onUpdateItem: (itemId: string, updates: Partial<CanvasItem>) => void;
   onDeleteItem: (itemId: string) => void;
-  onAddQuestion: (afterId?: string) => void;
+  onAddQuestion: (type?: string, afterId?: string) => void;
   onAddSection: (afterId?: string) => void;
   onReorderItems: (draggedId: string, targetId: string) => void;
   onSetDraggedItem: (itemId: string | null) => void;
@@ -231,7 +231,7 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
                 }}
               >
                 <AddElementSection
-                  onAddQuestion={() => onAddQuestion(item.id)}
+                  onAddQuestion={(type) => onAddQuestion(type, item.id)}
                   onAddSection={() => onAddSection(item.id)}
                   isCreating={isCreating}
                 />
