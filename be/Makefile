@@ -7,7 +7,7 @@ ifneq (,$(wildcard .env))
 endif
 
 # Default DATABASE_URL if not set
-DATABASE_URL ?= postgres://postgres:postgres@localhost:5432/memotoko?sslmode=disable
+DATABASE_URL ?= postgres://postgres:postgres@localhost:5432/form?sslmode=disable
 MIGRATIONS_DIR = ./migrations
 
 help:

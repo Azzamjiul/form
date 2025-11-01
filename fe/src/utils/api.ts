@@ -30,15 +30,25 @@ export const api = ky.create({
               // Try to refresh the token
               const refreshResponse = await ky.post(`${API_BASE_URL}/auth/refresh`, {
                 json: { refresh_token: refreshToken },
-              }).json<{ access_token: string; refresh_token: string }>();
+              }).json<{
+                success: boolean;
+                data: {
+                  access_token: string;
+                  refresh_token: string;
+                } | null;
+              }>();
 
-              // Store new tokens
-              localStorage.setItem('access_token', refreshResponse.access_token);
-              localStorage.setItem('refresh_token', refreshResponse.refresh_token);
+              if (refreshResponse.success && refreshResponse.data) {
+                // Store new tokens
+                localStorage.setItem('access_token', refreshResponse.data.access_token);
+                localStorage.setItem('refresh_token', refreshResponse.data.refresh_token);
 
-              // Retry the original request with the new token
-              request.headers.set('Authorization', `Bearer ${refreshResponse.access_token}`);
-              return ky(request);
+                // Retry the original request with the new token
+                request.headers.set('Authorization', `Bearer ${refreshResponse.data.access_token}`);
+                return ky(request);
+              } else {
+                throw new Error('Failed to refresh token');
+              }
             } catch (error) {
               // If refresh fails, clear tokens and redirect to login
               localStorage.removeItem('access_token');

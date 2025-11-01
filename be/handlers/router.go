@@ -25,7 +25,7 @@ func NewRouter(authHandler *AuthHandler, jwtUtil *utils.JWTUtil) *Router {
 
 func (r *Router) SetupRoutes(engine *gin.Engine) {
 	// API routes
-	api := engine.Group("/api")
+	api := engine.Group("/api/v1")
 	{
 		auth := api.Group("/auth")
 		{
@@ -36,6 +36,7 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 
 			// Protected routes
 			auth.GET("/me", middleware.AuthMiddleware(r.jwtUtil), r.authHandler.GetMe)
+			auth.POST("/logout", middleware.AuthMiddleware(r.jwtUtil), r.authHandler.Logout)
 		}
 	}
 

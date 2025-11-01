@@ -1,9 +1,10 @@
 export interface User {
-  id: string;
+  user_id: string;
   email: string;
   name: string;
-  created_at: string;
-  updated_at: string;
+  role: string;
+  created_at?: string;
+  last_login_at?: string;
 }
 
 export interface RegisterRequest {
@@ -21,11 +22,37 @@ export interface RefreshTokenRequest {
   refresh_token: string;
 }
 
-export interface AuthResponse {
+export interface AuthData {
+  user_id: string;
+  email: string;
+  name: string;
+  role: string;
   access_token: string;
   refresh_token: string;
-  user: User;
+  created_at?: string;
+  last_login_at?: string;
 }
+
+export interface LogoutData {
+  message: string;
+}
+
+export interface ErrorData {
+  code: string;
+  message: string;
+  details?: Record<string, any>;
+}
+
+export interface APIResponse<T> {
+  success: boolean;
+  data: T | null;
+  error: ErrorData | null;
+  timestamp: string;
+}
+
+export type AuthResponse = APIResponse<AuthData>;
+export type UserResponse = APIResponse<User>;
+export type LogoutResponse = APIResponse<LogoutData>;
 
 export interface AuthError {
   error: string;

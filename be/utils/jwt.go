@@ -83,3 +83,7 @@ func (j *JWTUtil) validateToken(tokenString, secret string) (*JWTClaims, error) 
 func ParseDuration(duration string) (time.Duration, error) {
 	return time.ParseDuration(duration)
 }
+
+func TimeNow() time.Time {
+	return time.Now()
+}

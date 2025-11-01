@@ -4,7 +4,8 @@ import type {
   LoginRequest,
   RefreshTokenRequest,
   RegisterRequest,
-  User,
+  UserResponse,
+  LogoutResponse,
 } from '../types';
 
 export const authApi = {
@@ -44,8 +45,17 @@ export const authApi = {
   /**
    * Get current user information
    */
-  getMe: async (): Promise<User> => {
-    const response = await api.get('auth/me').json<User>();
+  getMe: async (): Promise<UserResponse> => {
+    const response = await api.get('auth/me').json<UserResponse>();
+
+    return response;
+  },
+
+  /**
+   * Logout current user
+   */
+  logout: async (): Promise<LogoutResponse> => {
+    const response = await api.post('auth/logout').json<LogoutResponse>();
 
     return response;
   },

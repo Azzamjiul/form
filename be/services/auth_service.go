@@ -30,7 +30,7 @@ func (s *AuthService) Register(req *models.RegisterRequest) (*models.AuthRespons
 	// Check if user already exists
 	var existingUser models.User
 	if err := s.db.Where("email = ?", req.Email).First(&existingUser).Error; err == nil {
-		return nil, errors.New("user with this email already exists")
+		return nil, errors.New("Email already exists")
 	}
 
 	// Hash password
@@ -41,10 +41,12 @@ func (s *AuthService) Register(req *models.RegisterRequest) (*models.AuthRespons
 
 	// Create new user
 	user := &models.User{
-		ID:       uuid.New().String(),
-		Email:    req.Email,
-		Password: string(hashedPassword),
-		Name:     req.Name,
+		ID:           uuid.New(),
+		Email:        req.Email,
+		PasswordHash: string(hashedPassword),
+		Name:         req.Name,
+		Role:         "creator",
+		IsActive:     true,
 	}
 
 	// Save user to database
@@ -56,24 +58,27 @@ func (s *AuthService) Register(req *models.RegisterRequest) (*models.AuthRespons
 	accessExpiry, _ := utils.ParseDuration(s.config.AccessTokenExpiry)
 	refreshExpiry, _ := utils.ParseDuration(s.config.RefreshTokenExpiry)
 
-	accessToken, err := s.jwtUtil.GenerateAccessToken(user.ID, user.Email, accessExpiry)
+	accessToken, err := s.jwtUtil.GenerateAccessToken(user.ID.String(), user.Email, accessExpiry)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := s.jwtUtil.GenerateRefreshToken(user.ID, user.Email, refreshExpiry)
+	refreshToken, err := s.jwtUtil.GenerateRefreshToken(user.ID.String(), user.Email, refreshExpiry)
 	if err != nil {
 		return nil, err
 	}
 
-	// Update user with refresh token
-	user.RefreshToken = refreshToken
-	s.db.Save(user)
+	// Format timestamps
+	createdAt := user.CreatedAt.Format("2006-01-02T15:04:05Z07:00")
 
 	return &models.AuthResponse{
+		UserID:       user.ID.String(),
+		Email:        user.Email,
+		Name:         user.Name,
+		Role:         user.Role,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		User:         *user,
+		CreatedAt:    &createdAt,
 	}, nil
 }
 
@@ -82,38 +87,48 @@ func (s *AuthService) Login(req *models.LoginRequest) (*models.AuthResponse, err
 	var user models.User
 	if err := s.db.Where("email = ?", req.Email).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("invalid email or password")
+			return nil, errors.New("Invalid email or password")
 		}
 		return nil, err
 	}
 
 	// Verify password
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		return nil, errors.New("invalid email or password")
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+		return nil, errors.New("Invalid email or password")
+	}
+
+	// Update last login timestamp
+	now := utils.TimeNow()
+	user.LastLoginAt = &now
+	if err := s.db.Save(&user).Error; err != nil {
+		return nil, err
 	}
 
 	// Generate tokens
 	accessExpiry, _ := utils.ParseDuration(s.config.AccessTokenExpiry)
 	refreshExpiry, _ := utils.ParseDuration(s.config.RefreshTokenExpiry)
 
-	accessToken, err := s.jwtUtil.GenerateAccessToken(user.ID, user.Email, accessExpiry)
+	accessToken, err := s.jwtUtil.GenerateAccessToken(user.ID.String(), user.Email, accessExpiry)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := s.jwtUtil.GenerateRefreshToken(user.ID, user.Email, refreshExpiry)
+	refreshToken, err := s.jwtUtil.GenerateRefreshToken(user.ID.String(), user.Email, refreshExpiry)
 	if err != nil {
 		return nil, err
 	}
 
-	// Update user with new refresh token
-	user.RefreshToken = refreshToken
-	s.db.Save(&user)
+	// Format timestamps
+	lastLoginAt := user.LastLoginAt.Format("2006-01-02T15:04:05Z07:00")
 
 	return &models.AuthResponse{
+		UserID:       user.ID.String(),
+		Email:        user.Email,
+		Name:         user.Name,
+		Role:         user.Role,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		User:         user,
+		LastLoginAt:  &lastLoginAt,
 	}, nil
 }
 
@@ -121,56 +136,65 @@ func (s *AuthService) RefreshToken(req *models.RefreshTokenRequest) (*models.Aut
 	// Validate refresh token
 	claims, err := s.jwtUtil.ValidateRefreshToken(req.RefreshToken)
 	if err != nil {
-		return nil, errors.New("invalid refresh token")
+		return nil, errors.New("Refresh token expired or invalid")
 	}
 
 	// Find user
 	var user models.User
 	if err := s.db.Where("id = ?", claims.UserID).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("user not found")
+			return nil, errors.New("Refresh token expired or invalid")
 		}
 		return nil, err
-	}
-
-	// Verify stored refresh token matches
-	if user.RefreshToken != req.RefreshToken {
-		return nil, errors.New("invalid refresh token")
 	}
 
 	// Generate new tokens
 	accessExpiry, _ := utils.ParseDuration(s.config.AccessTokenExpiry)
 	refreshExpiry, _ := utils.ParseDuration(s.config.RefreshTokenExpiry)
 
-	accessToken, err := s.jwtUtil.GenerateAccessToken(user.ID, user.Email, accessExpiry)
+	accessToken, err := s.jwtUtil.GenerateAccessToken(user.ID.String(), user.Email, accessExpiry)
 	if err != nil {
 		return nil, err
 	}
 
-	newRefreshToken, err := s.jwtUtil.GenerateRefreshToken(user.ID, user.Email, refreshExpiry)
+	newRefreshToken, err := s.jwtUtil.GenerateRefreshToken(user.ID.String(), user.Email, refreshExpiry)
 	if err != nil {
 		return nil, err
 	}
-
-	// Update user with new refresh token
-	user.RefreshToken = newRefreshToken
-	s.db.Save(&user)
 
 	return &models.AuthResponse{
+		UserID:       user.ID.String(),
+		Email:        user.Email,
+		Name:         user.Name,
+		Role:         user.Role,
 		AccessToken:  accessToken,
 		RefreshToken: newRefreshToken,
-		User:         user,
 	}, nil
 }
 
-func (s *AuthService) GetMe(userID string) (*models.User, error) {
+func (s *AuthService) GetMe(userID string) (*models.UserResponse, error) {
 	var user models.User
 	if err := s.db.Where("id = ?", userID).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("user not found")
+			return nil, errors.New("Invalid or expired token")
 		}
 		return nil, err
 	}
 
-	return &user, nil
+	// Format timestamps
+	createdAt := user.CreatedAt.Format("2006-01-02T15:04:05Z07:00")
+	var lastLoginAt *string
+	if user.LastLoginAt != nil {
+		formatted := user.LastLoginAt.Format("2006-01-02T15:04:05Z07:00")
+		lastLoginAt = &formatted
+	}
+
+	return &models.UserResponse{
+		UserID:      user.ID.String(),
+		Email:       user.Email,
+		Name:        user.Name,
+		Role:        user.Role,
+		CreatedAt:   createdAt,
+		LastLoginAt: lastLoginAt,
+	}, nil
 }

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authApi } from '../api/auth';
+import type { User } from '../types';
 
 /**
  * Hook for user registration
@@ -9,14 +10,26 @@ export const useRegister = () => {
 
   return useMutation({
     mutationFn: authApi.register,
-    onSuccess: (data) => {
-      // Store tokens in localStorage
-      localStorage.setItem('access_token', data.access_token);
-      localStorage.setItem('refresh_token', data.refresh_token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+    onSuccess: (response) => {
+      if (response.success && response.data) {
+        // Store tokens in localStorage
+        localStorage.setItem('access_token', response.data.access_token);
+        localStorage.setItem('refresh_token', response.data.refresh_token);
 
-      // Update query cache
-      queryClient.setQueryData(['user'], data.user);
+        // Store user data
+        const user: User = {
+          user_id: response.data.user_id,
+          email: response.data.email,
+          name: response.data.name,
+          role: response.data.role,
+          created_at: response.data.created_at,
+          last_login_at: response.data.last_login_at,
+        };
+        localStorage.setItem('user', JSON.stringify(user));
+
+        // Update query cache
+        queryClient.setQueryData(['user'], user);
+      }
     },
   });
 };
@@ -29,14 +42,26 @@ export const useLogin = () => {
 
   return useMutation({
     mutationFn: authApi.login,
-    onSuccess: (data) => {
-      // Store tokens in localStorage
-      localStorage.setItem('access_token', data.access_token);
-      localStorage.setItem('refresh_token', data.refresh_token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+    onSuccess: (response) => {
+      if (response.success && response.data) {
+        // Store tokens in localStorage
+        localStorage.setItem('access_token', response.data.access_token);
+        localStorage.setItem('refresh_token', response.data.refresh_token);
 
-      // Update query cache
-      queryClient.setQueryData(['user'], data.user);
+        // Store user data
+        const user: User = {
+          user_id: response.data.user_id,
+          email: response.data.email,
+          name: response.data.name,
+          role: response.data.role,
+          created_at: response.data.created_at,
+          last_login_at: response.data.last_login_at,
+        };
+        localStorage.setItem('user', JSON.stringify(user));
+
+        // Update query cache
+        queryClient.setQueryData(['user'], user);
+      }
     },
   });
 };
@@ -49,14 +74,26 @@ export const useRefreshToken = () => {
 
   return useMutation({
     mutationFn: authApi.refreshToken,
-    onSuccess: (data) => {
-      // Store new tokens
-      localStorage.setItem('access_token', data.access_token);
-      localStorage.setItem('refresh_token', data.refresh_token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+    onSuccess: (response) => {
+      if (response.success && response.data) {
+        // Store new tokens
+        localStorage.setItem('access_token', response.data.access_token);
+        localStorage.setItem('refresh_token', response.data.refresh_token);
 
-      // Update query cache
-      queryClient.setQueryData(['user'], data.user);
+        // Store user data
+        const user: User = {
+          user_id: response.data.user_id,
+          email: response.data.email,
+          name: response.data.name,
+          role: response.data.role,
+          created_at: response.data.created_at,
+          last_login_at: response.data.last_login_at,
+        };
+        localStorage.setItem('user', JSON.stringify(user));
+
+        // Update query cache
+        queryClient.setQueryData(['user'], user);
+      }
     },
   });
 };
@@ -67,7 +104,10 @@ export const useRefreshToken = () => {
 export const useUser = () => {
   return useQuery({
     queryKey: ['user'],
-    queryFn: authApi.getMe,
+    queryFn: async () => {
+      const response = await authApi.getMe();
+      return response.success && response.data ? response.data : null;
+    },
     enabled: !!localStorage.getItem('access_token'),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: false,
@@ -84,16 +124,28 @@ export const useUser = () => {
 export const useLogout = () => {
   const queryClient = useQueryClient();
 
-  return () => {
-    // Clear tokens from localStorage
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
+  return useMutation({
+    mutationFn: authApi.logout,
+    onSuccess: () => {
+      // Clear tokens from localStorage
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
 
-    // Clear query cache
-    queryClient.setQueryData(['user'], null);
-    queryClient.clear();
-  };
+      // Clear query cache
+      queryClient.setQueryData(['user'], null);
+      queryClient.clear();
+    },
+    onError: () => {
+      // Even if logout fails on server, clear local data
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+
+      queryClient.setQueryData(['user'], null);
+      queryClient.clear();
+    },
+  });
 };
 
 /**
