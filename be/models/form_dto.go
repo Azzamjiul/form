@@ -1,5 +1,7 @@
 package models
 
+import "gorm.io/datatypes"
+
 // Request DTOs
 
 type CreateFormRequest struct {
@@ -71,15 +73,17 @@ type SectionResponse struct {
 }
 
 type FieldResponse struct {
-	FieldID        string  `json:"field_id"`
-	ContentType    string  `json:"content_type"`
-	FieldType      *string `json:"field_type,omitempty"`
-	Label          string  `json:"label"`
-	Description    *string `json:"description,omitempty"`
-	OrderGlobal    int     `json:"order_global"`
-	OrderInSection *int    `json:"order_in_section,omitempty"`
-	IsRequired     bool    `json:"is_required"`
-	Points         int     `json:"points"`
+	FieldID        string          `json:"field_id"`
+	ContentType    string          `json:"content_type"`
+	FieldType      *string         `json:"field_type,omitempty"`
+	Label          string          `json:"label"`
+	Description    *string         `json:"description,omitempty"`
+	OrderGlobal    int             `json:"order_global"`
+	OrderInSection *int            `json:"order_in_section,omitempty"`
+	SectionID      *string         `json:"section_id,omitempty"`
+	IsRequired     bool            `json:"is_required"`
+	Points         int             `json:"points"`
+	AnswerKey      *datatypes.JSON `json:"answer_key,omitempty"`
 }
 
 type FormSummary struct {
