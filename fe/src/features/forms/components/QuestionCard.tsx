@@ -39,14 +39,9 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   const [title, setTitle] = useState(item.title);
   const [description, setDescription] = useState(item.description);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
-  const [showAnswerKey, setShowAnswerKey] = useState(false);
   // const [showScaleDialog, setShowScaleDialog] = useState(false); // TODO: Implement scale dialog
   const [scaleMin, setScaleMin] = useState(1);
   const [scaleMax, setScaleMax] = useState(5);
-  const [points, setPoints] = useState(item.points || 0);
-
-  // Answer key state
-  const [newAcceptableAnswer, setNewAcceptableAnswer] = useState('');
 
   const questionType = item.questionType || 'text';
 
@@ -139,55 +134,6 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     onUpdate({ answerKey: newAnswerKey });
   };
 
-  const handleAddAcceptableAnswer = () => {
-    if (!newAcceptableAnswer.trim()) return;
-
-    const currentAnswerKey = item.answerKey as any;
-    const acceptableAnswers = currentAnswerKey?.acceptable_answers || [];
-
-    const newAnswerKey: AnswerKey = {
-      type: 'text',
-      case_sensitive: currentAnswerKey?.case_sensitive || false,
-      acceptable_answers: [...acceptableAnswers, newAcceptableAnswer.trim()],
-      trim_whitespace: currentAnswerKey?.trim_whitespace !== false
-    };
-
-    onUpdate({ answerKey: newAnswerKey });
-    setNewAcceptableAnswer('');
-  };
-
-  const handleRemoveAcceptableAnswer = (index: number) => {
-    const currentAnswerKey = item.answerKey as any;
-    const acceptableAnswers = currentAnswerKey?.acceptable_answers || [];
-
-    const newAnswerKey: AnswerKey = {
-      type: 'text',
-      case_sensitive: currentAnswerKey?.case_sensitive || false,
-      acceptable_answers: acceptableAnswers.filter((_: string, i: number) => i !== index),
-      trim_whitespace: currentAnswerKey?.trim_whitespace !== false
-    };
-
-    onUpdate({ answerKey: newAnswerKey });
-  };
-
-  const handleToggleCaseSensitive = () => {
-    const currentAnswerKey = item.answerKey as any;
-
-    const newAnswerKey: AnswerKey = {
-      type: 'text',
-      case_sensitive: !(currentAnswerKey?.case_sensitive || false),
-      acceptable_answers: currentAnswerKey?.acceptable_answers || [],
-      trim_whitespace: currentAnswerKey?.trim_whitespace !== false
-    };
-
-    onUpdate({ answerKey: newAnswerKey });
-  };
-
-  const handlePointsChange = (newPoints: number) => {
-    setPoints(newPoints);
-    onUpdate({ points: newPoints });
-  };
-
 
   // Render question content preview
   const renderQuestionContent = () => {
@@ -210,37 +156,36 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         const mcAnswerKey = item.answerKey as any;
         const mcCorrectOptions = mcAnswerKey?.correct_options || [];
         return (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {item.options?.map((option) => {
               const isCorrect = mcCorrectOptions.includes(option.id);
               return (
-                <div key={option.id} className="flex items-center gap-3 group p-2 rounded hover:bg-gray-50">
+                <div key={option.id} className="flex items-center gap-3 group py-1">
                   <div
-                    className={`w-6 h-6 border-2 rounded-full flex-shrink-0 cursor-pointer flex items-center justify-center transition-colors ${
-                      isCorrect ? 'border-green-500 bg-green-50' : 'border-gray-300'
+                    className={`w-5 h-5 border-2 rounded-full flex-shrink-0 cursor-pointer flex items-center justify-center transition-colors ${
+                      isCorrect ? 'border-green-600 bg-green-50' : 'border-gray-400'
                     }`}
                     onClick={() => handleToggleCorrectOption(option.id)}
                     title={isCorrect ? 'Correct answer' : 'Mark as correct'}
                   >
                     {isCorrect && (
-                      <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
+                      <div className="w-3 h-3 bg-green-600 rounded-full"></div>
                     )}
                   </div>
                   <input
                     type="text"
                     value={option.label}
                     onChange={(e) => handleOptionChange(option.id, e.target.value)}
-                    className="flex-1 text-sm text-gray-700 border-b border-transparent hover:border-gray-300 focus:border-purple-600 outline-none bg-transparent"
+                    className="flex-1 text-sm text-gray-700 border-none outline-none bg-transparent px-1 py-1.5 focus:bg-gray-50 rounded"
                     placeholder="Option"
                   />
                   <button
-                    className="opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 flex items-center justify-center text-gray-400 hover:text-gray-600"
                     onClick={() => handleDeleteOption(option.id)}
                     disabled={item.options?.length === 2}
+                    title="Delete option"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
@@ -248,11 +193,11 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               );
             })}
             <button
-              className="flex items-center gap-3 mt-3 text-purple-600 hover:text-purple-700 text-sm font-medium"
+              className="flex items-center gap-3 mt-2 text-gray-600 hover:text-gray-800 text-sm py-1"
               onClick={handleAddOption}
             >
-              <div className="w-6 h-6 border-2 border-gray-300 rounded-full" />
-              Add option
+              <div className="w-5 h-5 border-2 border-gray-400 rounded-full" />
+              <span>Add option</span>
             </button>
           </div>
         );
@@ -427,127 +372,70 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       onDrop={onDrop}
       onDragEnd={onDragEnd}
     >
-      {/* Top-right actions */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '12px',
-          right: '12px',
-          display: 'flex',
-          gap: '8px'
-        }}
-      >
-        <button
-          className="w-10 h-10 flex items-center justify-center bg-transparent border-none cursor-pointer rounded-md text-gray-600 hover:bg-gray-100 hover:text-purple-600 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation();
-            // TODO: Implement duplicate functionality
-          }}
-          title="Duplicate"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-          </svg>
-        </button>
-        <button
-          className="w-10 h-10 flex items-center justify-center bg-transparent border-none cursor-pointer rounded-md text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          title="Delete"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-        </button>
-      </div>
+      {/* Title and Type Selector Row */}
+      <div className="flex items-start gap-4">
+        {/* Question Title */}
+        <div className="flex-1">
+          <RichTextEditor
+            content={title}
+            onChange={handleTitleChange}
+            placeholder="Question"
+            showToolbar={true}
+            toolbarPosition="bottom"
+            style={{
+              fontSize: '16px',
+              fontWeight: 400,
+              color: '#202124',
+              lineHeight: 1.5,
+              border: 'none',
+              background: 'transparent',
+              fontFamily: 'inherit',
+            }}
+            className="transition-all duration-200"
+          />
+        </div>
 
-      {/* Question Title */}
-      <RichTextEditor
-        content={title}
-        onChange={handleTitleChange}
-        placeholder="Question"
-        showToolbar={true}
-        toolbarPosition="bottom"
-        style={{
-          fontSize: '18px',
-          fontWeight: 500,
-          color: '#202124',
-          lineHeight: 1.5,
-          border: 'none',
-          background: 'transparent',
-          fontFamily: 'inherit',
-        }}
-        className="transition-all duration-200"
-      />
-
-      {/* Question Description */}
-      <RichTextEditor
-        content={description}
-        onChange={handleDescriptionChange}
-        placeholder="Description (optional)"
-        showToolbar={true}
-        toolbarPosition="bottom"
-        style={{
-          fontSize: '14px',
-          fontWeight: 400,
-          color: '#808080',
-          border: 'none',
-          background: 'transparent',
-          fontFamily: 'inherit',
-          padding: '8px 0',
-        }}
-        className="transition-all duration-200"
-      />
-
-      {/* Divider */}
-      <div
-        style={{
-          height: '1px',
-          background: '#E8E8E8',
-          margin: '0',
-          width: '100%'
-        }}
-      />
-
-      {/* Question Type Selector */}
-      <div className="flex items-start gap-3">
-        <div className="relative">
+        {/* Question Type Selector */}
+        <div className="relative" onClick={(e) => e.stopPropagation()}>
           <button
-            className="flex items-center gap-3 bg-gray-100 border border-gray-300 rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition-colors min-w-[200px] justify-between"
+            className="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors min-w-[180px] justify-between"
             onClick={(e) => {
               e.stopPropagation();
               setShowTypeDropdown(!showTypeDropdown);
             }}
           >
-            <span>{currentTypeLabel}</span>
+            <div className="flex items-center gap-2">
+              <span className="w-5 h-5 flex items-center justify-center text-lg">
+                {QUESTION_TYPES.find(t => t.value === questionType)?.icon || '◉'}
+              </span>
+              <span>{currentTypeLabel}</span>
+            </div>
             <svg
-              className="w-3 h-3 text-gray-500 transition-transform"
-              style={{ transform: showTypeDropdown ? 'scaleY(-1)' : 'scaleY(1)' }}
+              className="w-4 h-4 text-gray-500 transition-transform"
+              style={{ transform: showTypeDropdown ? 'rotate(180deg)' : 'rotate(0deg)' }}
               fill="currentColor"
-              viewBox="0 0 24 24"
+              viewBox="0 0 20 20"
             >
-              <path d="M7 10l5 5 5-5z"/>
+              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
           </button>
 
           {/* Dropdown Menu */}
           {showTypeDropdown && (
             <div
-              className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 min-w-[250px] max-h-[400px] overflow-y-auto"
+              className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 min-w-[220px] max-h-[400px] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {QUESTION_TYPES.map((type) => (
                 <button
                   key={type.value}
                   className={`
-                    w-full px-4 py-3 h-10 flex items-center gap-3 text-sm text-gray-700 border-none bg-transparent cursor-pointer hover:bg-gray-100
-                    ${questionType === type.value ? 'bg-blue-50 text-purple-600 font-semibold' : ''}
+                    w-full px-4 py-2 flex items-center gap-3 text-sm text-gray-700 border-none bg-transparent cursor-pointer hover:bg-gray-100 transition-colors
+                    ${questionType === type.value ? 'bg-purple-50 text-purple-700 font-medium' : ''}
                   `}
                   onClick={() => handleTypeChange(type.value)}
                 >
-                  <span className="w-5 h-5 flex items-center justify-center text-sm">
+                  <span className="w-5 h-5 flex items-center justify-center text-base">
                     {type.icon}
                   </span>
                   {type.label}
@@ -558,144 +446,96 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         </div>
       </div>
 
+      {/* Question Description */}
+      {description && (
+        <RichTextEditor
+          content={description}
+          onChange={handleDescriptionChange}
+          placeholder="Description (optional)"
+          showToolbar={true}
+          toolbarPosition="bottom"
+          style={{
+            fontSize: '13px',
+            fontWeight: 400,
+            color: '#70757a',
+            border: 'none',
+            background: 'transparent',
+            fontFamily: 'inherit',
+            padding: '0',
+          }}
+          className="transition-all duration-200"
+        />
+      )}
+
+      {/* Divider */}
+      <div
+        style={{
+          height: '1px',
+          background: '#dadce0',
+          margin: '8px 0',
+          width: '100%'
+        }}
+      />
+
       {/* Question Content Preview */}
-      <div className="mb-4">
+      <div>
         {renderQuestionContent()}
       </div>
 
-      {/* Answer Key Section for Text Questions */}
-      {(questionType === 'text' || questionType === 'paragraph') && (
-        <div className="mb-4 border border-gray-200 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <h3 className="text-sm font-semibold text-gray-800">Answer Key</h3>
-            </div>
-            <button
-              onClick={() => setShowAnswerKey(!showAnswerKey)}
-              className="text-xs text-purple-600 hover:text-purple-700 font-medium"
-            >
-              {showAnswerKey ? 'Hide' : 'Show'}
-            </button>
-          </div>
-
-          {showAnswerKey && (
-            <div className="space-y-3">
-              {/* Case Sensitive Toggle */}
-              <div className="flex items-center gap-3">
-                <button
-                  className={`w-12 h-6 rounded-full border-none cursor-pointer relative transition-colors ${
-                    (item.answerKey as any)?.case_sensitive ? 'bg-purple-600' : 'bg-gray-300'
-                  }`}
-                  onClick={handleToggleCaseSensitive}
-                >
-                  <span
-                    className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all ${
-                      (item.answerKey as any)?.case_sensitive ? 'left-6' : 'left-0.5'
-                    }`}
-                  />
-                </button>
-                <span className="text-sm text-gray-700">Case sensitive</span>
-              </div>
-
-              {/* Acceptable Answers List */}
-              <div>
-                <label className="text-xs font-medium text-gray-600 mb-2 block">
-                  Acceptable Answers
-                </label>
-                <div className="space-y-2">
-                  {((item.answerKey as any)?.acceptable_answers || []).map((answer: string, index: number) => (
-                    <div key={index} className="flex items-center gap-2 bg-green-50 border border-green-200 rounded px-3 py-2">
-                      <span className="flex-1 text-sm text-gray-700">{answer}</span>
-                      <button
-                        onClick={() => handleRemoveAcceptableAnswer(index)}
-                        className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-red-500"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Add New Answer */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newAcceptableAnswer}
-                  onChange={(e) => setNewAcceptableAnswer(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddAcceptableAnswer()}
-                  placeholder="Add acceptable answer..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-                <button
-                  onClick={handleAddAcceptableAnswer}
-                  disabled={!newAcceptableAnswer.trim()}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Add
-                </button>
-              </div>
-
-              <p className="text-xs text-gray-500 italic">
-                Students can provide any of these answers to get full credit. Leave empty if this is not a quiz question.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Points Field */}
-      <div className="mb-4">
-        <label className="text-sm font-medium text-gray-700 mb-2 block">
-          Points
-        </label>
-        <input
-          type="number"
-          value={points}
-          onChange={(e) => handlePointsChange(Number(e.target.value))}
-          min="0"
-          className="w-24 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-        />
-      </div>
-
-      {/* Required Toggle and Actions */}
+      {/* Bottom Actions Bar */}
       <div
-        className="flex items-center justify-between pt-3 border-t border-gray-200"
+        className="flex items-center justify-between pt-4 border-t border-gray-200"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Left Actions */}
         <div className="flex items-center gap-3">
           <button
+            className="p-2 flex items-center justify-center bg-transparent border-none cursor-pointer rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              // TODO: Implement duplicate functionality
+            }}
+            title="Duplicate"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+          </button>
+          <button
+            className="p-2 flex items-center justify-center bg-transparent border-none cursor-pointer rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            title="Delete"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+          <div className="w-px h-6 bg-gray-300"></div>
+          <button
             className={`
-              w-12 h-6 rounded-full border-none cursor-pointer relative transition-colors
-              ${item.required ? 'bg-purple-600' : 'bg-gray-300'}
+              flex items-center gap-2 px-3 py-1.5 rounded-full border-none cursor-pointer transition-colors
+              ${item.required ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'}
             `}
             onClick={() => onUpdate({ required: !item.required })}
           >
-            <span
-              className={`
-                absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all
-                ${item.required ? 'left-6' : 'left-0.5'}
-              `}
-            />
+            <span className="text-sm font-medium">Required</span>
           </button>
-          <span className="text-sm text-gray-700 font-medium">Required</span>
         </div>
 
+        {/* Right Actions */}
         <div className="flex items-center gap-2">
           <button
-            className="w-10 h-10 flex items-center justify-center bg-transparent border-none cursor-pointer rounded-md text-gray-600 hover:bg-gray-100 hover:text-purple-600 transition-colors"
+            className="p-2 flex items-center justify-center bg-transparent border-none cursor-pointer rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
             onClick={() => {
               // TODO: Implement more options
             }}
             title="More options"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
             </svg>
           </button>
         </div>
