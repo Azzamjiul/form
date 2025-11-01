@@ -4,8 +4,20 @@ import { useNavigate } from 'react-router';
 import { formsApi } from '../../features/forms';
 import type { CreateFormRequest, FormListParams } from '../../features/forms';
 import { FormList, CreateFormDialog } from '../../features/forms/components';
+import { DashboardLayout } from '../../components/layout';
+import { ProtectedRoute } from '../../features/auth';
 
 export default function FormsPage() {
+  return (
+    <ProtectedRoute>
+      <DashboardLayout>
+        <FormsContent />
+      </DashboardLayout>
+    </ProtectedRoute>
+  );
+}
+
+function FormsContent() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -144,3 +156,4 @@ export default function FormsPage() {
     </div>
   );
 }
+
