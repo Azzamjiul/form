@@ -275,6 +275,7 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
         >
           <CenterCanvas
             items={items}
+            formId={formId}
             selectedItemId={selectedItemId}
             draggedItemId={draggedItemId}
             onSelectItem={handleSelectItem}

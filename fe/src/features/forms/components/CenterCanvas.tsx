@@ -9,6 +9,7 @@ import './CenterCanvas.css';
 
 interface CenterCanvasProps {
   items: CanvasItem[];
+  formId: string;
   selectedItemId: string | null;
   draggedItemId: string | null;
   onSelectItem: (itemId: string) => void;
@@ -24,6 +25,7 @@ interface CenterCanvasProps {
 
 export const CenterCanvas: React.FC<CenterCanvasProps> = ({
   items,
+  formId,
   selectedItemId,
   draggedItemId,
   onSelectItem,
@@ -85,6 +87,7 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
           <SurveyHeaderCard
             key={item.id}
             item={item}
+            formId={formId}
             isSelected={isSelected}
             isDragging={isDragging}
             isDragOver={isDragOver}
