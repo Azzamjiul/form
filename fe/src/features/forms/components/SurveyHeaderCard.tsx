@@ -32,15 +32,15 @@ export const SurveyHeaderCard: React.FC<SurveyHeaderCardProps> = ({
   onDrop,
   onDragEnd,
 }) => {
-  const [title, setTitle] = useState(item.title || '');
-  const [description, setDescription] = useState(item.description || '');
+  const [title, setTitle] = useState(item.title || "");
+  const [description, setDescription] = useState(item.description || "");
   const [isSaving, setIsSaving] = useState(false);
 
   // Update local state when item changes
   useEffect(() => {
     // Initialize with HTML content (plain text or formatted)
-    setTitle(item.title || '');
-    setDescription(item.description || '');
+    setTitle(item.title || "");
+    setDescription(item.description || "");
   }, [item.title, item.description]);
 
   // Debounced backend update
@@ -52,13 +52,14 @@ export const SurveyHeaderCard: React.FC<SurveyHeaderCardProps> = ({
           // Update the form via API
           await formsApi.updateForm(formId, {
             title: title !== item.title ? title : undefined,
-            description: description !== item.description ? description : undefined,
+            description:
+              description !== item.description ? description : undefined,
           });
 
           // Update local state to reflect successful save
           onUpdate({ title, description });
         } catch (error) {
-          console.error('Failed to save form:', error);
+          console.error("Failed to save form:", error);
           // Revert to original values on error
           setTitle(item.title);
           setDescription(item.description);
@@ -71,11 +72,10 @@ export const SurveyHeaderCard: React.FC<SurveyHeaderCardProps> = ({
     return () => clearTimeout(timeoutId);
   }, [title, description, item.title, item.description, formId, onUpdate]);
 
-  
   return (
     <div
       className={`
-        mt-10 relative transition-all duration-200 ease
+        mt-10 relative transition-all duration-200 ease bg-white
         ${isDragging ? "opacity-70 scale-102 shadow-lg z-50" : ""}
         ${isDragOver ? "border-2 border-purple-400 bg-purple-50" : ""}
         ${isSelected ? "shadow-md" : "shadow-sm hover:shadow-md"}
@@ -101,7 +101,6 @@ export const SurveyHeaderCard: React.FC<SurveyHeaderCardProps> = ({
       onDrop={onDrop}
       onDragEnd={onDragEnd}
     >
-      
       {/* Save Status Indicator */}
       {isSaving && (
         <div
@@ -130,7 +129,7 @@ export const SurveyHeaderCard: React.FC<SurveyHeaderCardProps> = ({
         }}
         className={`
           transition-all duration-200
-          ${isSelected ? '' : ''}
+          ${isSelected ? "" : ""}
         `}
       />
 
@@ -162,7 +161,7 @@ export const SurveyHeaderCard: React.FC<SurveyHeaderCardProps> = ({
         }}
         className={`
           transition-all duration-200
-          ${isSelected ? '' : ''}
+          ${isSelected ? "" : ""}
         `}
       />
     </div>

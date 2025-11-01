@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { FormWithSections } from '../types';
 import { Button } from '../../../components/ui';
 import { ShareModal } from './ShareModal';
@@ -11,17 +11,50 @@ interface TopNavigationProps {
 }
 
 export const TopNavigation: React.FC<TopNavigationProps> = ({ form, onFormUpdate }) => {
-  const [title, setTitle] = useState(form.title);
+  const [title, setTitle] = useState(form.title || '');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const { isMobile, isTablet } = useResponsive();
 
+  // Update title when form changes
+  useEffect(() => {
+    setTitle(form.title || '');
+  }, [form.title]);
+
+  // Extract plain text from HTML for display
+  const getPlainText = (html: string) => {
+    const div = document.createElement('div');
+    div.innerHTML = html || '';
+    return div.textContent || div.innerText || '';
+  };
+
   const handleTitleChange = (e: React.FocusEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
-    setTitle(newTitle);
-    if (newTitle !== form.title) {
-      onFormUpdate({ title: newTitle });
+    const newTitleHtml = newTitle.replace(/\n/g, '<br>');
+    setTitle(newTitleHtml);
+    if (newTitleHtml !== (form.title || '')) {
+      onFormUpdate({ title: newTitleHtml });
     }
+    setIsEditingTitle(false);
+  };
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur();
+      setIsEditingTitle(false);
+    }
+    if (e.key === 'Escape') {
+      setTitle(form.title || '');
+      setIsEditingTitle(false);
+    }
+  };
+
+  const handleTitleClick = () => {
+    // When starting to edit, convert HTML to plain text for the input
+    const plainTextTitle = getPlainText(title || '');
+    setTitle(plainTextTitle);
+    setIsEditingTitle(true);
   };
 
   const getShareUrl = () => {
@@ -52,16 +85,34 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({ form, onFormUpdate
 
             {/* Center Section - Form Title */}
             <div className="flex-1 max-w-md mx-8">
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onBlur={handleTitleChange}
-                className={`w-full border-2 border-transparent hover:border-gray-300 focus:border-purple-600 focus:outline-none transition-colors bg-transparent ${
-                  isTablet ? 'text-lg font-semibold' : 'text-xl font-bold'
-                } text-center`}
-                placeholder="Untitled Form"
-              />
+              {isEditingTitle ? (
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onBlur={handleTitleChange}
+                  onKeyDown={handleTitleKeyDown}
+                  className={`w-full border-2 border-purple-600 focus:outline-none transition-colors bg-transparent ${
+                    isTablet ? 'text-lg font-semibold' : 'text-xl font-bold'
+                  } text-center`}
+                  placeholder="Untitled Form"
+                  autoFocus
+                />
+              ) : (
+                <div
+                  onClick={handleTitleClick}
+                  className={`w-full border-2 border-transparent hover:border-gray-300 cursor-pointer transition-colors bg-transparent ${
+                    isTablet ? 'text-lg font-semibold' : 'text-xl font-bold'
+                  } text-center truncate px-2 py-1`}
+                  title="Click to edit title"
+                >
+                  {title ? (
+                    <span dangerouslySetInnerHTML={{ __html: title }} />
+                  ) : (
+                    <span className="text-gray-400">Untitled Form</span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Right Section - Action Buttons */}
@@ -125,14 +176,30 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({ form, onFormUpdate
 
             {/* Center - Form Title */}
             <div className="flex-1 mx-3">
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onBlur={handleTitleChange}
-                className="w-full text-base font-semibold text-center border-2 border-transparent hover:border-gray-300 focus:border-purple-600 focus:outline-none transition-colors bg-transparent"
-                placeholder="Untitled Form"
-              />
+              {isEditingTitle ? (
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onBlur={handleTitleChange}
+                  onKeyDown={handleTitleKeyDown}
+                  className="w-full text-base font-semibold text-center border-2 border-purple-600 focus:outline-none transition-colors bg-transparent"
+                  placeholder="Untitled Form"
+                  autoFocus
+                />
+              ) : (
+                <div
+                  onClick={handleTitleClick}
+                  className="w-full text-base font-semibold text-center border-2 border-transparent hover:border-gray-300 cursor-pointer transition-colors bg-transparent truncate px-2 py-1"
+                  title="Click to edit title"
+                >
+                  {title ? (
+                    <span dangerouslySetInnerHTML={{ __html: title }} />
+                  ) : (
+                    <span className="text-gray-400">Untitled Form</span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Right - Send Button */}
