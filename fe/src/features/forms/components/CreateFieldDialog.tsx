@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { fieldsApi } from '../api/fields';
 import type { CreateFieldRequest } from '../types';
+import { Dialog, Button, Input, Textarea, Toggle } from '../../../components/ui';
 
 interface CreateFieldDialogProps {
   formId: string;
@@ -79,168 +80,141 @@ export const CreateFieldDialog: React.FC<CreateFieldDialogProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Create Field</h2>
-
-          {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-red-600 text-sm">{error}</p>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Content Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Content Type *
-              </label>
-              <select
-                value={formData.content_type}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    content_type: e.target.value as any,
-                    field_type: e.target.value === 'input_field' ? 'text' : undefined,
-                  })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="input_field">Input Field</option>
-                <option value="section">Section</option>
-                <option value="display_text">Display Text</option>
-              </select>
-            </div>
-
-            {/* Field Type (only for input_field) */}
-            {formData.content_type === 'input_field' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Field Type *
-                </label>
-                <select
-                  value={formData.field_type || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, field_type: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  {FIELD_TYPES.map((type) => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Label */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Label *
-              </label>
-              <input
-                type="text"
-                value={formData.label || ''}
-                onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Enter field label"
-              />
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                value={formData.description || ''}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                rows={3}
-                placeholder="Optional description or help text"
-              />
-            </div>
-
-            {/* Order Global */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Order (Global) *
-              </label>
-              <input
-                type="number"
-                value={formData.order_global || ''}
-                onChange={(e) =>
-                  setFormData({ ...formData, order_global: parseInt(e.target.value) })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                min="1"
-              />
-            </div>
-
-            {/* Required (only for input_field) */}
-            {formData.content_type === 'input_field' && (
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="is_required"
-                  checked={formData.is_required || false}
-                  onChange={(e) =>
-                    setFormData({ ...formData, is_required: e.target.checked })
-                  }
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-                <label htmlFor="is_required" className="ml-2 text-sm text-gray-700">
-                  Required field
-                </label>
-              </div>
-            )}
-
-            {/* Points (only for input_field) */}
-            {formData.content_type === 'input_field' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Points
-                </label>
-                <input
-                  type="number"
-                  value={formData.points || 0}
-                  onChange={(e) =>
-                    setFormData({ ...formData, points: parseInt(e.target.value) || 0 })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  min="0"
-                />
-              </div>
-            )}
-
-            {/* Buttons */}
-            <div className="flex gap-3 pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={loading}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-              >
-                {loading ? 'Creating...' : 'Create Field'}
-              </button>
-            </div>
-          </form>
+    <Dialog
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Create Field"
+      size="lg"
+    >
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
+          <p className="text-red-600 text-sm">{error}</p>
         </div>
-      </div>
-    </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Content Type */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Content Type *
+          </label>
+          <select
+            value={formData.content_type}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                content_type: e.target.value as any,
+                field_type: e.target.value === 'input_field' ? 'text' : undefined,
+              })
+            }
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+          >
+            <option value="input_field">Input Field</option>
+            <option value="section">Section</option>
+            <option value="display_text">Display Text</option>
+          </select>
+        </div>
+
+        {/* Field Type (only for input_field) */}
+        {formData.content_type === 'input_field' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Field Type *
+            </label>
+            <select
+              value={formData.field_type || ''}
+              onChange={(e) =>
+                setFormData({ ...formData, field_type: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              {FIELD_TYPES.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Label */}
+        <Input
+          label="Label"
+          required
+          value={formData.label || ''}
+          onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+          placeholder="Enter field label"
+        />
+
+        {/* Description */}
+        <Textarea
+          label="Description"
+          value={formData.description || ''}
+          onChange={(e) =>
+            setFormData({ ...formData, description: e.target.value })
+          }
+          rows={3}
+          placeholder="Optional description or help text"
+        />
+
+        {/* Order Global */}
+        <Input
+          label="Order (Global)"
+          type="number"
+          required
+          min="1"
+          value={formData.order_global?.toString() || ''}
+          onChange={(e) =>
+            setFormData({ ...formData, order_global: parseInt(e.target.value) })
+          }
+        />
+
+        {/* Required (only for input_field) */}
+        {formData.content_type === 'input_field' && (
+          <Toggle
+            label="Required field"
+            checked={formData.is_required || false}
+            onChange={(checked) =>
+              setFormData({ ...formData, is_required: checked as any })
+            }
+          />
+        )}
+
+        {/* Points (only for input_field) */}
+        {formData.content_type === 'input_field' && (
+          <Input
+            label="Points"
+            type="number"
+            min="0"
+            value={formData.points?.toString() || '0'}
+            onChange={(e) =>
+              setFormData({ ...formData, points: parseInt(e.target.value) || 0 })
+            }
+          />
+        )}
+
+        {/* Buttons */}
+        <div className="flex gap-3 pt-4">
+          <Button
+            type="button"
+            onClick={onClose}
+            disabled={loading}
+            variant="outline"
+            className="flex-1"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={loading}
+            loading={loading}
+            className="flex-1"
+          >
+            Create Field
+          </Button>
+        </div>
+      </form>
+    </Dialog>
   );
 };

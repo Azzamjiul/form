@@ -5,6 +5,16 @@ export { FieldList } from './FieldList';
 export { CreateFieldDialog } from './CreateFieldDialog';
 export { FieldManagement } from './FieldManagement';
 
+// Survey Builder components
+export { CreateSectionDialog } from './CreateSectionDialog';
+export { SurveyBuilder } from './SurveyBuilder';
+export { QuestionsSidebar } from './QuestionsSidebar';
+export { QuestionCanvas } from './QuestionCanvas';
+export { BuilderToolbar } from './BuilderToolbar';
+export { TopNavigation } from './TopNavigation';
+export { ShareModal } from './ShareModal';
+export { SettingsModal } from './SettingsModal';
+
 // Whitelist components
 export { CreateWhitelistDialog } from './CreateWhitelistDialog';
 export { WhitelistManagement } from './WhitelistManagement';
