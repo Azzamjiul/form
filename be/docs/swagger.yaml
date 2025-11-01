@@ -48,6 +48,8 @@ definitions:
         type: boolean
       label:
         type: string
+      options:
+        type: object
       order_global:
         type: integer
       order_in_section:
@@ -238,10 +240,14 @@ definitions:
         type: object
       description:
         type: string
+      field_type:
+        type: string
       is_required:
         type: boolean
       label:
         type: string
+      options:
+        type: object
       order_global:
         type: integer
       order_in_section:

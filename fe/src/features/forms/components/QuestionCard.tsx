@@ -19,15 +19,7 @@ interface QuestionCardProps {
 
 const QUESTION_TYPES = [
   { value: 'text', label: 'Short answer', icon: 'T' },
-  { value: 'paragraph', label: 'Paragraph', icon: '¶' },
-  { value: 'multiple_choice', label: 'Multiple choice', icon: '◉' },
-  { value: 'checkbox', label: 'Checkboxes', icon: '☐' },
-  { value: 'dropdown', label: 'Dropdown', icon: '▼' },
-  { value: 'linear_scale', label: 'Linear scale', icon: '1―5' },
-  { value: 'rating', label: 'Rating', icon: '★' },
-  { value: 'date', label: 'Date', icon: '📅' },
-  { value: 'time', label: 'Time', icon: '🕐' },
-  { value: 'file_upload', label: 'File upload', icon: '📎' }
+  { value: 'multiple_choice', label: 'Multiple choice', icon: '◉' }
 ];
 
 export const QuestionCard: React.FC<QuestionCardProps> = ({
@@ -79,16 +71,22 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   // Handle question type change
   const handleTypeChange = (newType: string) => {
     setShowTypeDropdown(false);
-    onUpdate({ questionType: newType });
 
-    // Initialize options for choice-based questions
-    if (['multiple_choice', 'checkbox'].includes(newType) && (!item.options || item.options.length === 0)) {
+    // Initialize options and answer key for multiple choice questions
+    if (newType === 'multiple_choice' && (!item.options || item.options.length === 0)) {
       onUpdate({
+        questionType: newType,
         options: [
           { id: '1', label: 'Option 1' },
           { id: '2', label: 'Option 2' }
-        ]
+        ],
+        answerKey: {
+          type: 'multiple_choice',
+          correct_options: []
+        }
       });
+    } else {
+      onUpdate({ questionType: newType });
     }
   };
 

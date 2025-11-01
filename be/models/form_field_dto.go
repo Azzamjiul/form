@@ -19,6 +19,7 @@ type CreateFieldRequest struct {
 }
 
 type UpdateFieldRequest struct {
+	FieldType      *string         `json:"field_type"`
 	Label          *string         `json:"label"`
 	Description    *string         `json:"description"`
 	IsRequired     *bool           `json:"is_required"`

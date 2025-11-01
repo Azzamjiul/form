@@ -2214,6 +2214,9 @@ const docTemplate = `{
                 "label": {
                     "type": "string"
                 },
+                "options": {
+                    "type": "object"
+                },
                 "order_global": {
                     "type": "integer"
                 },
@@ -2491,11 +2494,17 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "field_type": {
+                    "type": "string"
+                },
                 "is_required": {
                     "type": "boolean"
                 },
                 "label": {
                     "type": "string"
+                },
+                "options": {
+                    "type": "object"
                 },
                 "order_global": {
                     "type": "integer"

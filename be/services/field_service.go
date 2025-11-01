@@ -145,6 +145,25 @@ func (s *FieldService) UpdateField(formID uuid.UUID, fieldID uuid.UUID, req *mod
 
 	// Build updates
 	updates := make(map[string]interface{})
+	if req.FieldType != nil {
+		// Only allow field_type update for input_field content type
+		if field.ContentType != "input_field" {
+			return nil, errors.New("field_type can only be updated for input_field content type")
+		}
+		// Validate field_type
+		validFieldTypes := []string{"text", "multiple_choice", "paragraph", "checkbox", "dropdown", "date", "time", "file_upload", "linear_scale", "grid"}
+		isValid := false
+		for _, validType := range validFieldTypes {
+			if *req.FieldType == validType {
+				isValid = true
+				break
+			}
+		}
+		if !isValid {
+			return nil, errors.New("Invalid field_type")
+		}
+		updates["field_type"] = *req.FieldType
+	}
 	if req.Label != nil {
 		updates["label"] = *req.Label
 	}
