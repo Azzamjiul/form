@@ -28,7 +28,8 @@ export const AddElementSection: React.FC<AddElementSectionProps> = ({
 
   const handleAddQuestionType = (type: string) => {
     setShowQuestionTypes(false);
-    // TODO: Pass the selected type to the parent
+    // TODO: Use the selected type
+    console.log('Selected question type:', type);
     onAddQuestion();
   };
 

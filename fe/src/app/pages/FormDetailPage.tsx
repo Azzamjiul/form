@@ -1,7 +1,6 @@
 import { useParams, useNavigate } from "react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formsApi } from "../../features/forms";
-import { DashboardLayout } from "../../components/layout";
 import { ProtectedRoute } from "../../features/auth";
 import { SurveyBuilder } from "../../features/forms/components/SurveyBuilder";
 import { TopNavigation } from "../../features/forms/components/TopNavigation";

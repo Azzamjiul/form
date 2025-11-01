@@ -200,7 +200,7 @@ export const QuestionCanvas: React.FC<QuestionCanvasProps> = ({
             <div className="flex items-center gap-3 mt-4">
               <Toggle
                 checked={fieldRequired}
-                onCheckedChange={setFieldRequired}
+                onChange={(e) => setFieldRequired(e.target.checked)}
               />
               <span className="text-sm text-gray-700">Required</span>
             </div>

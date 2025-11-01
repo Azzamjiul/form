@@ -4,23 +4,8 @@ import { TitleDescriptionCard } from './TitleDescriptionCard';
 import { QuestionCard } from './QuestionCard';
 import { PageBreakCard } from './PageBreakCard';
 import { AddElementSection } from './AddElementSection';
+import { type CanvasItem } from '../types';
 import './CenterCanvas.css';
-
-interface CanvasItem {
-  id: string;
-  type: 'header' | 'title-description' | 'question' | 'page-break';
-  title: string;
-  description: string;
-  questionType?: string;
-  required?: boolean;
-  options?: Array<{ id: string; label: string }>;
-  sectionNumber?: number;
-  totalSections?: number;
-  order: number;
-  isEditing?: boolean;
-  isSelected?: boolean;
-  isDragging?: boolean;
-}
 
 interface CenterCanvasProps {
   items: CanvasItem[];
@@ -35,7 +20,6 @@ interface CenterCanvasProps {
   onSetDraggedItem: (itemId: string | null) => void;
   isCreating: boolean;
   hasUnsavedChanges: boolean;
-  lastSavedAt: Date | null;
 }
 
 export const CenterCanvas: React.FC<CenterCanvasProps> = ({
@@ -50,8 +34,7 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
   onReorderItems,
   onSetDraggedItem,
   isCreating,
-  hasUnsavedChanges,
-  lastSavedAt
+  hasUnsavedChanges
 }) => {
   const [dragOverItemId, setDragOverItemId] = useState<string | null>(null);
 
@@ -229,7 +212,7 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
 
   return (
     <div className="flex flex-col" style={{ gap: '24px' }}>
-      {sortedItems.map((item, index) => (
+      {sortedItems.map((item) => (
         <React.Fragment key={item.id}>
           {/* Card with Floating Add Button */}
           <div className="relative">

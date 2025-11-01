@@ -1,17 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-
-interface CanvasItem {
-  id: string;
-  type: string;
-  title: string;
-  description: string;
-  sectionNumber?: number;
-  totalSections?: number;
-  order: number;
-  isEditing?: boolean;
-  isSelected?: boolean;
-  isDragging?: boolean;
-}
+import { type CanvasItem } from '../types';
 
 interface PageBreakCardProps {
   item: CanvasItem;
@@ -345,7 +333,7 @@ export const PageBreakCard: React.FC<PageBreakCardProps> = ({
       />
 
       {/* CSS for contenteditable placeholder */}
-      <style jsx>{`
+      <style>{`
         [data-placeholder]:empty:before {
           content: attr(data-placeholder);
           color: #808080;

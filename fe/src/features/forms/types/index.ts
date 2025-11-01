@@ -59,8 +59,10 @@ export interface FormField {
   description?: string;
   order_global: number;
   order_in_section?: number;
+  section_id?: string;
   is_required: boolean;
   points: number;
+  options?: Array<{ id: string; label: string }>;
 }
 
 export interface FormWithSections extends Form {
@@ -492,3 +494,20 @@ export type SessionStatusResponse = SessionStatusData;
 export type SubmitQuizResponse = SubmitQuizData;
 export type QuizResultResponse = QuizResultData;
 export type ResumeQuizResponse = ResumeQuizData;
+
+// Canvas Builder types
+export interface CanvasItem {
+  id: string;
+  type: 'header' | 'title-description' | 'question' | 'page-break';
+  title: string;
+  description: string;
+  questionType?: string;
+  required?: boolean;
+  options?: Array<{ id: string; label: string }>;
+  sectionNumber?: number;
+  totalSections?: number;
+  order: number;
+  isEditing?: boolean;
+  isSelected?: boolean;
+  isDragging?: boolean;
+}

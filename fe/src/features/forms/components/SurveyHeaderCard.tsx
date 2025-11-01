@@ -1,15 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-
-interface CanvasItem {
-  id: string;
-  type: string;
-  title: string;
-  description: string;
-  order: number;
-  isEditing?: boolean;
-  isSelected?: boolean;
-  isDragging?: boolean;
-}
+import { type CanvasItem } from "../types";
 
 interface SurveyHeaderCardProps {
   item: CanvasItem;

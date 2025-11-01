@@ -1,18 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-
-interface CanvasItem {
-  id: string;
-  type: string;
-  title: string;
-  description: string;
-  questionType?: string;
-  required?: boolean;
-  options?: Array<{ id: string; label: string }>;
-  order: number;
-  isEditing?: boolean;
-  isSelected?: boolean;
-  isDragging?: boolean;
-}
+import { type CanvasItem } from '../types';
 
 interface QuestionCardProps {
   item: CanvasItem;
@@ -60,7 +47,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   const [description, setDescription] = useState(item.description);
   const [showFormatting, setShowFormatting] = useState(false);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
-  const [showScaleDialog, setShowScaleDialog] = useState(false);
+  // const [showScaleDialog, setShowScaleDialog] = useState(false); // TODO: Implement scale dialog
   const [scaleMin, setScaleMin] = useState(1);
   const [scaleMax, setScaleMax] = useState(5);
   const titleRef = useRef<HTMLDivElement>(null);
@@ -619,7 +606,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       </div>
 
       {/* CSS for contenteditable placeholder */}
-      <style jsx>{`
+      <style>{`
         [data-placeholder]:empty:before {
           content: attr(data-placeholder);
           color: #808080;

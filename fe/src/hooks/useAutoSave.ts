@@ -25,7 +25,7 @@ export function useAutoSave<T>(
   options: AutoSaveOptions = {}
 ) {
   const { delay = 2000, onSave, onError } = options;
-  const saveTimeoutRef = useRef<number>();
+  const saveTimeoutRef = useRef<number | undefined>(undefined);
   const isSavingRef = useRef(false);
   const dataRef = useRef(data);
 

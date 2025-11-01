@@ -2,29 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { formsApi } from '../api/forms';
 import { fieldsApi } from '../api/fields';
-import type { FormWithSections, CreateFieldRequest } from '../types';
+import type { FormWithSections, CreateFieldRequest, CanvasItem } from '../types';
 import { CenterCanvas } from './CenterCanvas';
 import { useAutoSave } from '../../../hooks/useAutoSave';
 
 interface SurveyBuilderProps {
   formId: string;
   initialForm: FormWithSections;
-}
-
-interface CanvasItem {
-  id: string;
-  type: 'header' | 'title-description' | 'question' | 'page-break';
-  title: string;
-  description: string;
-  questionType?: string;
-  required?: boolean;
-  options?: Array<{ id: string; label: string }>;
-  sectionNumber?: number;
-  totalSections?: number;
-  order: number;
-  isEditing?: boolean;
-  isSelected?: boolean;
-  isDragging?: boolean;
 }
 
 export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialForm }) => {
@@ -34,7 +18,7 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
   const { data: formResponse } = useQuery({
     queryKey: ['form', formId],
     queryFn: () => formsApi.getFormById(formId),
-    initialData: { success: true, data: initialForm },
+    initialData: { success: true, data: initialForm, error: null, timestamp: new Date().toISOString() },
   });
 
   const form = formResponse?.success ? formResponse.data : initialForm;
@@ -46,7 +30,7 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
   const [isSaving, setIsSaving] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  // const [lastSavedAt] = useState<Date | null>(null);
 
   // Transform form data into canvas items
   const transformFormToItems = useCallback((formData: FormWithSections): CanvasItem[] => {
@@ -123,14 +107,16 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
 
   // Update items when form data changes
   useEffect(() => {
+    if (!form) return;
     const newItems = transformFormToItems(form);
     setItems(newItems);
   }, [form, transformFormToItems]);
 
   // Auto-save functionality
-  const { triggerSave } = useAutoSave(
+  useAutoSave(
     form,
     async (formData) => {
+      if (!formData) return;
       const response = await formsApi.updateForm(formId, {
         title: formData.title,
         description: formData.description,
@@ -147,7 +133,7 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
   );
 
   // Handle adding new question
-  const handleAddQuestion = useCallback(async (afterId?: string) => {
+  const handleAddQuestion = useCallback(async (_afterId?: string) => {
     if (isCreating) return;
 
     setIsCreating(true);
@@ -177,7 +163,7 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
   }, [isCreating, items, formId, queryClient]);
 
   // Handle adding new section
-  const handleAddSection = useCallback(async (afterId?: string) => {
+  const handleAddSection = useCallback(async (_afterId?: string) => {
     if (isCreating) return;
 
     setIsCreating(true);
@@ -300,13 +286,12 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
             onSetDraggedItem={setDraggedItemId}
             isCreating={isCreating}
             hasUnsavedChanges={hasUnsavedChanges}
-            lastSavedAt={lastSavedAt}
           />
         </div>
       </div>
 
       {/* Responsive styles */}
-      <style jsx>{`
+      <style>{`
         @media (max-width: 1024px) {
           div[style*="padding: '40px 32px'"] {
             padding: 32px 24px;

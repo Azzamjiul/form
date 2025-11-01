@@ -1,15 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-
-interface CanvasItem {
-  id: string;
-  type: string;
-  title: string;
-  description: string;
-  order: number;
-  isEditing?: boolean;
-  isSelected?: boolean;
-  isDragging?: boolean;
-}
+import { type CanvasItem } from '../types';
 
 interface TitleDescriptionCardProps {
   item: CanvasItem;
@@ -289,7 +279,7 @@ export const TitleDescriptionCard: React.FC<TitleDescriptionCardProps> = ({
       </div>
 
       {/* CSS for contenteditable placeholder */}
-      <style jsx>{`
+      <style>{`
         [data-placeholder]:empty:before {
           content: attr(data-placeholder);
           color: #808080;

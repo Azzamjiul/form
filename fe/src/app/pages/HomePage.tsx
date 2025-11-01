@@ -6,7 +6,7 @@ export const HomePage = () => {
   const logout = useLogout();
 
   const handleLogout = () => {
-    logout();
+    logout.mutate();
     window.location.href = '/login';
   };
 

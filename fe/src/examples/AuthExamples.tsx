@@ -111,7 +111,7 @@ export function LogoutExample() {
   const logout = useLogout();
 
   const handleLogout = () => {
-    logout();
+    logout.mutate();
     window.location.href = '/login';
   };
 
@@ -192,7 +192,7 @@ export function CompleteAuthFlowExample() {
       <div>
         <h1>Welcome, {user.name}!</h1>
         <p>Email: {user.email}</p>
-        <button onClick={() => logout()}>Logout</button>
+        <button onClick={() => logout.mutate()}>Logout</button>
       </div>
     );
   }
@@ -293,7 +293,7 @@ export function CustomHookExample() {
       {user && <p>Hello, {user.name}</p>}
       {isAdmin && <button>Admin Panel</button>}
       {canEdit && <button>Edit Content</button>}
-      <button onClick={logout}>Logout</button>
+      <button onClick={() => logout.mutate()}>Logout</button>
     </div>
   );
 }

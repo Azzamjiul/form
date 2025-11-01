@@ -21,7 +21,7 @@ export const Sidebar = () => {
   const logout = useLogout();
 
   const handleLogout = () => {
-    logout();
+    logout.mutate();
     navigate('/login');
   };
 
