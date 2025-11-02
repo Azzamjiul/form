@@ -12,16 +12,19 @@ import (
 )
 
 type Router struct {
-	authHandler      *AuthHandler
-	formHandler      *FormHandler
-	sectionHandler   *SectionHandler
-	fieldHandler     *FieldHandler
-	whitelistHandler *WhitelistHandler
-	quizHandler      *QuizHandler
-	jwtUtil          *utils.JWTUtil
+	authHandler         *AuthHandler
+	formHandler         *FormHandler
+	sectionHandler      *SectionHandler
+	fieldHandler        *FieldHandler
+	whitelistHandler    *WhitelistHandler
+	quizHandler         *QuizHandler
+	responseHandler     *FormResponseHandler
+	analyticsHandler    *AnalyticsHandler
+	exportHandler       *ExportHandler
+	jwtUtil             *utils.JWTUtil
 }
 
-func NewRouter(authHandler *AuthHandler, formHandler *FormHandler, sectionHandler *SectionHandler, fieldHandler *FieldHandler, whitelistHandler *WhitelistHandler, quizHandler *QuizHandler, jwtUtil *utils.JWTUtil) *Router {
+func NewRouter(authHandler *AuthHandler, formHandler *FormHandler, sectionHandler *SectionHandler, fieldHandler *FieldHandler, whitelistHandler *WhitelistHandler, quizHandler *QuizHandler, responseHandler *FormResponseHandler, analyticsHandler *AnalyticsHandler, exportHandler *ExportHandler, jwtUtil *utils.JWTUtil) *Router {
 	return &Router{
 		authHandler:      authHandler,
 		formHandler:      formHandler,
@@ -29,6 +32,9 @@ func NewRouter(authHandler *AuthHandler, formHandler *FormHandler, sectionHandle
 		fieldHandler:     fieldHandler,
 		whitelistHandler: whitelistHandler,
 		quizHandler:      quizHandler,
+		responseHandler: responseHandler,
+		analyticsHandler: analyticsHandler,
+		exportHandler:    exportHandler,
 		jwtUtil:          jwtUtil,
 	}
 }
@@ -83,6 +89,22 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 			forms.GET("/:form_id/whitelist/:whitelist_id", r.whitelistHandler.GetWhitelistEntry)
 			forms.PUT("/:form_id/whitelist/:whitelist_id", r.whitelistHandler.UpdateWhitelistEntry)
 			forms.DELETE("/:form_id/whitelist/:whitelist_id", r.whitelistHandler.RevokeWhitelistEntry)
+
+			// Form response routes (nested under forms, protected)
+			forms.GET("/:form_id/responses", r.responseHandler.GetFormResponses)
+			forms.GET("/:form_id/responses/summary", r.responseHandler.GetResponseSummary)
+			forms.GET("/:form_id/responses/:response_id", r.responseHandler.GetResponseDetails)
+			forms.DELETE("/:form_id/responses/:response_id", r.responseHandler.DeleteResponse)
+			forms.PUT("/:form_id/responses/:response_id/flag", r.responseHandler.FlagResponse)
+
+			// Analytics routes (nested under forms, protected)
+			forms.GET("/:form_id/analytics", r.analyticsHandler.GetFormAnalytics)
+			forms.GET("/:form_id/analytics/questions", r.analyticsHandler.GetQuestionAnalytics)
+			forms.GET("/:form_id/analytics/sections", r.analyticsHandler.GetSectionAnalytics)
+			forms.GET("/:form_id/analytics/trends", r.analyticsHandler.GetResponseTrends)
+
+			// Export routes (nested under forms, protected)
+			forms.GET("/:form_id/export", r.exportHandler.ExportFormResponses)
 		}
 
 		// Whitelist validation route (public - no auth required)
@@ -98,6 +120,14 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 			quiz.POST("/:session_id/submit", r.quizHandler.SubmitQuiz)
 			quiz.GET("/result/:response_id", r.quizHandler.GetQuizResult)
 			quiz.POST("/resume", r.quizHandler.ResumeQuiz)
+		}
+
+		// Export routes (protected)
+		exports := api.Group("/exports")
+		exports.Use(middleware.AuthMiddleware(r.jwtUtil))
+		{
+			exports.GET("/:job_id/status", r.exportHandler.GetExportStatus)
+			exports.GET("/:job_id/download", r.exportHandler.DownloadExport)
 		}
 	}
 

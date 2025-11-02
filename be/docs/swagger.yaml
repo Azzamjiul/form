@@ -146,6 +146,31 @@ definitions:
       message:
         type: string
     type: object
+  models.ExportResponse:
+    properties:
+      completed_at:
+        type: string
+      created_at:
+        type: string
+      download_url:
+        type: string
+      file_size:
+        type: integer
+      job_id:
+        type: string
+      record_count:
+        type: integer
+      status:
+        description: '"pending", "processing", "completed", "failed"'
+        type: string
+    type: object
+  models.FlagRequest:
+    properties:
+      is_flagged:
+        type: boolean
+      notes:
+        type: string
+    type: object
   models.LoginRequest:
     properties:
       email:
@@ -440,6 +465,89 @@ paths:
       summary: Register a new user
       tags:
       - auth
+  /exports/{job_id}/download:
+    get:
+      consumes:
+      - application/json
+      description: Download the exported file when the job is completed
+      parameters:
+      - description: Export job ID
+        in: path
+        name: job_id
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Download exported file
+      tags:
+      - export
+  /exports/{job_id}/status:
+    get:
+      consumes:
+      - application/json
+      description: Check the status of an export job and get download URL when ready
+      parameters:
+      - description: Export job ID
+        in: path
+        name: job_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ExportResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get export job status
+      tags:
+      - export
   /forms:
     get:
       consumes:
@@ -636,6 +744,214 @@ paths:
       summary: Update form settings
       tags:
       - forms
+  /forms/{form_id}/analytics:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed analytics including summary statistics, score
+        distribution, time analytics, and question performance
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Start date for analytics period (YYYY-MM-DD)
+        in: query
+        name: date_from
+        type: string
+      - description: End date for analytics period (YYYY-MM-DD)
+        in: query
+        name: date_to
+        type: string
+      - description: Group responses by time period
+        enum:
+        - day
+        - week
+        - month
+        in: query
+        name: group_by
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get comprehensive analytics for a form
+      tags:
+      - analytics
+  /forms/{form_id}/analytics/questions:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed analytics for each question including answer
+        distribution and performance metrics
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get question-level analytics for a form
+      tags:
+      - analytics
+  /forms/{form_id}/analytics/sections:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve analytics for each section including average scores and
+        completion rates
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get section-level analytics for a form
+      tags:
+      - analytics
+  /forms/{form_id}/analytics/trends:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve trend data showing responses over time with grouping options
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Group responses by time period
+        enum:
+        - day
+        - week
+        - month
+        in: query
+        name: group_by
+        required: true
+        type: string
+      - description: Start date for trend analysis (YYYY-MM-DD)
+        in: query
+        name: date_from
+        type: string
+      - description: End date for trend analysis (YYYY-MM-DD)
+        in: query
+        name: date_to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get response trends over time for a form
+      tags:
+      - analytics
   /forms/{form_id}/duplicate:
     post:
       consumes:
@@ -681,6 +997,88 @@ paths:
       summary: Duplicate form
       tags:
       - forms
+  /forms/{form_id}/export:
+    get:
+      consumes:
+      - application/json
+      description: Export form responses as CSV, Excel, or JSON with customizable
+        columns and data inclusion
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Export format
+        enum:
+        - csv
+        - excel
+        - json
+        in: query
+        name: format
+        required: true
+        type: string
+      - collectionFormat: csv
+        description: Specific columns to include
+        in: query
+        items:
+          type: string
+        name: columns
+        type: array
+      - description: Start date filter (YYYY-MM-DD)
+        in: query
+        name: from_date
+        type: string
+      - description: End date filter (YYYY-MM-DD)
+        in: query
+        name: to_date
+        type: string
+      - default: true
+        description: Include detailed answers
+        in: query
+        name: include_answers
+        type: boolean
+      - default: false
+        description: Include analytics summary
+        in: query
+        name: include_analytics
+        type: boolean
+      - description: Filter by pass/fail status
+        in: query
+        name: is_passed
+        type: boolean
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Export form responses in various formats
+      tags:
+      - export
   /forms/{form_id}/fields:
     get:
       consumes:
@@ -982,6 +1380,280 @@ paths:
       summary: Publish form
       tags:
       - forms
+  /forms/{form_id}/responses:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve paginated list of all responses for a form with filtering
+        and sorting options
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - default: submitted_at
+        description: Sort by field
+        enum:
+        - submitted_at
+        - score
+        - time_spent
+        - respondent_name
+        in: query
+        name: sort_by
+        type: string
+      - default: desc
+        description: Sort order
+        enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - description: Search by respondent name or email
+        in: query
+        name: search
+        type: string
+      - description: Filter by pass/fail status
+        in: query
+        name: is_passed
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all responses for a form
+      tags:
+      - form-responses
+  /forms/{form_id}/responses/{response_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Permanently delete a form response and all associated answers
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Response ID
+        in: path
+        name: response_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a specific response
+      tags:
+      - form-responses
+    get:
+      consumes:
+      - application/json
+      description: Retrieve complete details including all answers for a specific
+        form response
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Response ID
+        in: path
+        name: response_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get detailed information for a specific response
+      tags:
+      - form-responses
+  /forms/{form_id}/responses/{response_id}/flag:
+    put:
+      consumes:
+      - application/json
+      description: Mark a response as flagged for review or remove flag
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      - description: Response ID
+        in: path
+        name: response_id
+        required: true
+        type: string
+      - description: Flag request with is_flagged and optional notes
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.FlagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Flag or unflag a response
+      tags:
+      - form-responses
+  /forms/{form_id}/responses/summary:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve summary statistics including total responses, average
+        score, and pass rate
+      parameters:
+      - description: Form ID
+        in: path
+        name: form_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get response summary statistics for a form
+      tags:
+      - form-responses
   /forms/{form_id}/sections:
     get:
       consumes:
