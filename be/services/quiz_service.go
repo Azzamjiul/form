@@ -612,6 +612,8 @@ func (s *QuizService) ResumeQuiz(req *models.ResumeQuizRequest) (*models.ResumeQ
 func (s *QuizService) calculateScore(formID uuid.UUID, answers []models.SubmitAnswerItem) (float64, bool, error) {
 	var totalScore float64 = 0
 	var maxScore float64 = 0
+	var correctAnswers int = 0
+	var totalAnswerable int = 0
 
 	// Get all quiz fields
 	var fields []models.FormField
@@ -623,6 +625,11 @@ func (s *QuizService) calculateScore(formID uuid.UUID, answers []models.SubmitAn
 	for _, field := range fields {
 		maxScore += float64(field.Points)
 
+		// Count answerable fields (fields with answer keys)
+		if field.AnswerKey != nil && len(field.AnswerKey) > 0 {
+			totalAnswerable++
+		}
+
 		// Find user's answer
 		for _, answer := range answers {
 			fieldID, _ := uuid.Parse(answer.FieldID)
@@ -630,6 +637,7 @@ func (s *QuizService) calculateScore(formID uuid.UUID, answers []models.SubmitAn
 				isCorrect, pointsEarned := s.checkAnswerCorrectness(field.ID, answer.AnswerValue)
 				if isCorrect {
 					totalScore += pointsEarned
+					correctAnswers++
 				}
 				break
 			}
@@ -639,7 +647,11 @@ func (s *QuizService) calculateScore(formID uuid.UUID, answers []models.SubmitAn
 	// Calculate percentage
 	scorePercentage := float64(0)
 	if maxScore > 0 {
+		// Use points-based scoring if points are assigned
 		scorePercentage = (totalScore / maxScore) * 100
+	} else if totalAnswerable > 0 {
+		// Use count-based scoring if no points are assigned (each correct answer = 1 point)
+		scorePercentage = (float64(correctAnswers) / float64(totalAnswerable)) * 100
 	}
 
 	// Check if passed
@@ -820,7 +832,16 @@ func (s *QuizService) getCurrentTime() time.Time {
 
 // calculateTimeSpent calculates time spent in seconds from start time
 func (s *QuizService) calculateTimeSpent(startedAt time.Time) int {
-	return int(s.getCurrentTime().Sub(startedAt).Seconds())
+	// Ensure both times are in UTC for consistent calculation
+	startUTC := startedAt.UTC()
+	currentUTC := s.getCurrentTime()
+
+	duration := currentUTC.Sub(startUTC)
+	if duration < 0 {
+		// If we get a negative duration, return 0
+		return 0
+	}
+	return int(duration.Seconds())
 }
 
 // isSessionExpired checks if a session is expired
@@ -866,10 +887,17 @@ func (s *QuizService) calculateScoreOptimized(formID uuid.UUID, answers []models
 
 	var totalScore float64 = 0
 	var maxScore float64 = 0
+	var correctAnswers int = 0
+	var totalAnswerable int = 0
 
 	// Calculate score using optimized single-pass approach
 	for _, field := range formWithFields.Fields {
 		maxScore += float64(field.Points)
+
+		// Count answerable fields (fields with answer keys)
+		if field.AnswerKey != nil && len(field.AnswerKey) > 0 {
+			totalAnswerable++
+		}
 
 		// O(1) lookup instead of nested loop
 		userAnswer, exists := answerMap[field.ID.String()]
@@ -878,6 +906,7 @@ func (s *QuizService) calculateScoreOptimized(formID uuid.UUID, answers []models
 			isCorrect, pointsEarned := s.checkAnswerCorrectness(field.ID, userAnswer)
 			if isCorrect {
 				totalScore += pointsEarned
+				correctAnswers++
 			}
 		}
 	}
@@ -885,7 +914,11 @@ func (s *QuizService) calculateScoreOptimized(formID uuid.UUID, answers []models
 	// Calculate percentage
 	scorePercentage := float64(0)
 	if maxScore > 0 {
+		// Use points-based scoring if points are assigned
 		scorePercentage = (totalScore / maxScore) * 100
+	} else if totalAnswerable > 0 {
+		// Use count-based scoring if no points are assigned (each correct answer = 1 point)
+		scorePercentage = (float64(correctAnswers) / float64(totalAnswerable)) * 100
 	}
 
 	// Check if passed (using the form data we already fetched)
