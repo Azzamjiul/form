@@ -25,6 +25,8 @@ export { AddElementSection } from './AddElementSection';
 
 // Whitelist components
 export { CreateWhitelistDialog } from './CreateWhitelistDialog';
+export { BatchCreateWhitelistDialog } from './BatchCreateWhitelistDialog';
+export { EditWhitelistDialog } from './EditWhitelistDialog';
 export { WhitelistManagement } from './WhitelistManagement';
 
 // Quiz components

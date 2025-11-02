@@ -4,7 +4,9 @@ import { formsApi } from "../../features/forms";
 import { ProtectedRoute } from "../../features/auth";
 import { SurveyBuilder } from "../../features/forms/components/SurveyBuilder";
 import { TopNavigation } from "../../features/forms/components/TopNavigation";
+import { WhitelistManagement } from "../../features/forms/components/WhitelistManagement";
 import type { FormWithSections } from "../../features/forms/types";
+import { useState } from "react";
 
 export default function FormDetailPage() {
   return (
@@ -18,6 +20,7 @@ function FormBuilderContent() {
   const { formId } = useParams<{ formId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<'builder' | 'access'>('builder');
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["form", formId],
@@ -79,8 +82,42 @@ function FormBuilderContent() {
       {/* Top Navigation */}
       <TopNavigation form={form} onFormUpdate={handleFormUpdate} />
 
-      {/* Survey Builder */}
-      <SurveyBuilder formId={formId!} initialForm={form} />
+      {/* Tab Navigation */}
+      <div className="fixed top-14 left-0 right-0 bg-white border-b border-gray-200 z-10">
+        <div className="flex gap-1 px-4">
+          <button
+            onClick={() => setActiveTab('builder')}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'builder'
+                ? 'border-purple-600 text-purple-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+            }`}
+          >
+            Questions
+          </button>
+          <button
+            onClick={() => setActiveTab('access')}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'access'
+                ? 'border-purple-600 text-purple-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+            }`}
+          >
+            Access Control
+          </button>
+        </div>
+      </div>
+
+      {/* Content Area - adjust top padding for tabs */}
+      <div className="pt-14">
+        {activeTab === 'builder' ? (
+          <SurveyBuilder formId={formId!} initialForm={form} />
+        ) : (
+          <div className="container mx-auto px-4 py-8 max-w-6xl">
+            <WhitelistManagement formId={formId!} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
