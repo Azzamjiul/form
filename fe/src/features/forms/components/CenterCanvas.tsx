@@ -106,6 +106,7 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
           <TitleDescriptionCard
             key={item.id}
             item={item}
+            formId={formId}
             isSelected={isSelected}
             isDragging={isDragging}
             isDragOver={isDragOver}
@@ -125,6 +126,7 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
           <QuestionCard
             key={item.id}
             item={item}
+            formId={formId}
             isSelected={isSelected}
             isDragging={isDragging}
             isDragOver={isDragOver}
@@ -144,6 +146,7 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
           <PageBreakCard
             key={item.id}
             item={item}
+            formId={formId}
             isSelected={isSelected}
             isDragging={isDragging}
             isDragOver={isDragOver}

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { type CanvasItem } from '../types';
 import { RichTextEditor } from '../../../components/RichTextEditor';
+import { fieldsApi } from '../api/fields';
 
 interface TitleDescriptionCardProps {
   item: CanvasItem;
+  formId: string;
   isSelected: boolean;
   isDragging: boolean;
   isDragOver: boolean;
@@ -19,6 +21,7 @@ interface TitleDescriptionCardProps {
 
 export const TitleDescriptionCard: React.FC<TitleDescriptionCardProps> = ({
   item,
+  formId,
   isSelected,
   isDragging,
   isDragOver,
@@ -33,6 +36,8 @@ export const TitleDescriptionCard: React.FC<TitleDescriptionCardProps> = ({
 }) => {
   const [title, setTitle] = useState(item.title);
   const [description, setDescription] = useState(item.description);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Update local state when item changes
   useEffect(() => {
@@ -50,6 +55,31 @@ export const TitleDescriptionCard: React.FC<TitleDescriptionCardProps> = ({
   const handleDescriptionChange = (newDescription: string) => {
     setDescription(newDescription);
     onUpdate({ description: newDescription });
+  };
+
+  // Handle delete confirmation
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await fieldsApi.deleteField(formId, item.id);
+      onDelete(); // Call parent's onDelete to update local state
+      setShowDeleteModal(false);
+    } catch (error) {
+      console.error('Failed to delete section:', error);
+      alert('Failed to delete section. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowDeleteModal(false);
   };
 
   return (
@@ -107,10 +137,7 @@ export const TitleDescriptionCard: React.FC<TitleDescriptionCardProps> = ({
         </button>
         <button
           className="w-10 h-10 flex items-center justify-center bg-transparent border-none cursor-pointer rounded-md text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
+          onClick={handleDeleteClick}
           title="Delete"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,6 +183,42 @@ export const TitleDescriptionCard: React.FC<TitleDescriptionCardProps> = ({
           borderBottom: '1px solid #E8E8E8',
         }}
       />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={handleCancelDelete}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Delete Section?
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this section? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={handleCancelDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

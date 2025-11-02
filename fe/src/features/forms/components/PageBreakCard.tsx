@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { type CanvasItem } from '../types';
+import { fieldsApi } from '../api/fields';
 
 interface PageBreakCardProps {
   item: CanvasItem;
+  formId: string;
   isSelected: boolean;
   isDragging: boolean;
   isDragOver: boolean;
@@ -18,6 +20,7 @@ interface PageBreakCardProps {
 
 export const PageBreakCard: React.FC<PageBreakCardProps> = ({
   item,
+  formId,
   isSelected,
   isDragging,
   isDragOver,
@@ -33,6 +36,8 @@ export const PageBreakCard: React.FC<PageBreakCardProps> = ({
   const [title, setTitle] = useState(item.title);
   const [description, setDescription] = useState(item.description);
   const [showFormatting, setShowFormatting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const titleRef = useRef<HTMLDivElement>(null);
   const descriptionRef = useRef<HTMLDivElement>(null);
 
@@ -78,6 +83,31 @@ export const PageBreakCard: React.FC<PageBreakCardProps> = ({
   const formatText = (command: string, value?: string) => {
     document.execCommand(command, false, value);
     titleRef.current?.focus();
+  };
+
+  // Handle delete confirmation
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await fieldsApi.deleteField(formId, item.id);
+      onDelete(); // Call parent's onDelete to update local state
+      setShowDeleteModal(false);
+    } catch (error) {
+      console.error('Failed to delete page break:', error);
+      alert('Failed to delete page break. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowDeleteModal(false);
   };
 
   return (
@@ -154,10 +184,7 @@ export const PageBreakCard: React.FC<PageBreakCardProps> = ({
         </button>
         <button
           className="w-10 h-10 flex items-center justify-center bg-transparent border-none cursor-pointer rounded-md text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
+          onClick={handleDeleteClick}
           title="Delete"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -340,6 +367,42 @@ export const PageBreakCard: React.FC<PageBreakCardProps> = ({
           opacity: 1;
         }
       `}</style>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={handleCancelDelete}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Delete Page Break?
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this page break? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={handleCancelDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
