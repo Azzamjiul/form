@@ -14,4 +14,40 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // React ecosystem
+          'react-vendor': ['react', 'react-dom', 'react-router'],
+
+          // Editor and UI libraries
+          'editor-vendor': [
+            '@tiptap/core',
+            '@tiptap/extension-link',
+            '@tiptap/extension-underline',
+            '@tiptap/react',
+            '@tiptap/starter-kit',
+            '@dnd-kit/core',
+            '@dnd-kit/sortable',
+            '@dnd-kit/utilities'
+          ],
+
+          // Data fetching and utilities
+          'utils-vendor': [
+            '@tanstack/react-query',
+            'ky',
+            'dompurify'
+          ],
+
+          // Tailwind CSS utilities (line-clamp)
+          'tailwind-vendor': [
+            '@tailwindcss/line-clamp'
+          ]
+        }
+      }
+    },
+    // Increase chunk size warning limit slightly to account for vendor chunks
+    chunkSizeWarningLimit: 600
+  }
 })
