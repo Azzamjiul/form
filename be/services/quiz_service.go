@@ -154,13 +154,36 @@ func (s *QuizService) GetQuizContent(sessionID uuid.UUID, sessionToken string) (
 	for _, section := range sections {
 		fields := make([]models.QuizFieldContent, 0, len(section.Fields))
 		for _, field := range section.Fields {
+			orderInSection := 0
+			if field.OrderInSection != nil {
+				orderInSection = *field.OrderInSection
+			}
+
+			fieldType := ""
+			if field.FieldType != nil {
+				fieldType = *field.FieldType
+			}
+
+			// Parse options if they exist
+			var options []map[string]interface{}
+			if field.Options != nil && len(field.Options) > 0 {
+				json.Unmarshal(field.Options, &options)
+			}
+
+			description := ""
+			if field.Description != nil {
+				description = *field.Description
+			}
+
 			fields = append(fields, models.QuizFieldContent{
 				FieldID:        field.ID.String(),
 				ContentType:    field.ContentType,
-				FieldType:      field.FieldType,
+				FieldType:      &fieldType,
 				Label:          field.Label,
+				Description:    &description,
 				IsRequired:     field.IsRequired,
-				OrderInSection: *field.OrderInSection,
+				OrderInSection: orderInSection,
+				Options:        options,
 			})
 		}
 
@@ -171,6 +194,58 @@ func (s *QuizService) GetQuizContent(sessionID uuid.UUID, sessionToken string) (
 			VisibilityType: section.VisibilityType,
 			Fields:         fields,
 		})
+	}
+
+	// Get fields without sections (section_id IS NULL)
+	var fieldsWithoutSection []models.FormField
+	if err := s.db.Where("form_id = ? AND section_id IS NULL", session.FormID).
+		Order("order_global ASC").Find(&fieldsWithoutSection).Error; err != nil {
+		return nil, err
+	}
+
+	// If there are fields without sections, create a virtual "default" section
+	if len(fieldsWithoutSection) > 0 {
+		fields := make([]models.QuizFieldContent, 0, len(fieldsWithoutSection))
+		for i, field := range fieldsWithoutSection {
+			fieldType := ""
+			if field.FieldType != nil {
+				fieldType = *field.FieldType
+			}
+
+			// Parse options if they exist
+			var options []map[string]interface{}
+			if field.Options != nil && len(field.Options) > 0 {
+				json.Unmarshal(field.Options, &options)
+			}
+
+			description := ""
+			if field.Description != nil {
+				description = *field.Description
+			}
+
+			fields = append(fields, models.QuizFieldContent{
+				FieldID:        field.ID.String(),
+				ContentType:    field.ContentType,
+				FieldType:      &fieldType,
+				Label:          field.Label,
+				Description:    &description,
+				IsRequired:     field.IsRequired,
+				OrderInSection: i + 1,
+				Options:        options,
+			})
+		}
+
+		// Insert at the beginning or at the end based on order
+		defaultSection := models.QuizSectionContent{
+			SectionID:      "00000000-0000-0000-0000-000000000000", // Special ID for virtual section
+			Title:          "Questions",
+			OrderGlobal:    0,
+			VisibilityType: "always",
+			Fields:         fields,
+		}
+
+		// Insert at the beginning
+		sectionResponses = append([]models.QuizSectionContent{defaultSection}, sectionResponses...)
 	}
 
 	// Update last activity

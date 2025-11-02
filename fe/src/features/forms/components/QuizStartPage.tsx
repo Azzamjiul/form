@@ -140,9 +140,10 @@ export const QuizStartPage = ({
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="max-w-2xl w-full bg-white rounded-lg shadow-lg p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            dangerouslySetInnerHTML={validation.form?.title}
-          </h1>
+          <h1
+            className="text-3xl font-bold text-gray-900"
+            dangerouslySetInnerHTML={{ __html: validation.form?.title || '' }}
+          />
           <p className="mt-2 text-sm text-gray-600">
             Welcome, {validation.name}!
           </p>

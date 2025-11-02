@@ -149,7 +149,24 @@ export const QuizTakingInterface = ({ sessionData, onQuizCompleted }: QuizTaking
   const totalSections = quizContent.sections.length;
   const allFields = quizContent.sections.flatMap(s => s.fields);
   const answeredCount = allFields.filter(f => answers[f.field_id]).length;
-  const progressPercentage = (answeredCount / allFields.length) * 100;
+  const progressPercentage = allFields.length > 0 ? (answeredCount / allFields.length) * 100 : 0;
+
+  // Handle empty sections
+  if (!currentSection || totalSections === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="text-yellow-600 mb-4">
+            <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900">No Content Available</h2>
+          <p className="mt-2 text-sm text-gray-600">This quiz has no sections or questions yet.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -158,9 +175,10 @@ export const QuizTakingInterface = ({ sessionData, onQuizCompleted }: QuizTaking
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {quizContent.form.title}
-              </h1>
+              <h1
+                className="text-2xl font-bold text-gray-900"
+                dangerouslySetInnerHTML={{ __html: quizContent.form.title }}
+              />
               <p className="text-sm text-gray-500 mt-1">
                 Section {currentSectionIndex + 1} of {totalSections}: {currentSection.title}
               </p>

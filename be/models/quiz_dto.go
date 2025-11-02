@@ -68,12 +68,17 @@ type QuizSectionContent struct {
 }
 
 type QuizFieldContent struct {
-	FieldID        string          `json:"field_id"`
-	ContentType    string          `json:"content_type"`
-	FieldType      *string         `json:"field_type,omitempty"`
-	Label          string          `json:"label"`
-	IsRequired     bool            `json:"is_required"`
-	OrderInSection int             `json:"order_in_section"`
+	FieldID        string                   `json:"field_id"`
+	ContentType    string                   `json:"content_type"`
+	FieldType      *string                  `json:"field_type,omitempty"`
+	Label          string                   `json:"label"`
+	Description    *string                  `json:"description,omitempty"`
+	IsRequired     bool                     `json:"is_required"`
+	OrderInSection int                      `json:"order_in_section"`
+	Options        []map[string]interface{} `json:"options,omitempty"`
+	MinValue       *int                     `json:"min_value,omitempty"`
+	MaxValue       *int                     `json:"max_value,omitempty"`
+	Step           *int                     `json:"step,omitempty"`
 }
 
 type AutoSaveResponse struct {
