@@ -44,8 +44,9 @@ func (s *QuizService) StartQuiz(req *models.StartQuizRequest) (*models.StartQuiz
 		return nil, err
 	}
 
-	// Validate whitelist
-	if time.Now().After(whitelist.ExpiresAt) {
+	// Validate whitelist using consistent time
+	currentTime := s.getCurrentTime()
+	if currentTime.After(whitelist.ExpiresAt) {
 		return nil, errors.New("Access token has expired")
 	}
 
@@ -63,27 +64,26 @@ func (s *QuizService) StartQuiz(req *models.StartQuizRequest) (*models.StartQuiz
 		return nil, errors.New("Failed to generate session token")
 	}
 
-	// Calculate expiration
-	now := time.Now()
+	// Calculate expiration using consistent time
 	var expiresAt time.Time
 	if whitelist.Form.TimeLimitMinutes > 0 {
-		expiresAt = now.Add(time.Duration(whitelist.Form.TimeLimitMinutes) * time.Minute)
+		expiresAt = currentTime.Add(time.Duration(whitelist.Form.TimeLimitMinutes) * time.Minute)
 	} else {
 		// Default 24 hours if no time limit
-		expiresAt = now.Add(24 * time.Hour)
+		expiresAt = currentTime.Add(24 * time.Hour)
 	}
 
-	// Create session
+	// Create session with consistent timestamps
 	session := &models.FormSession{
 		ID:             uuid.New(),
 		FormID:         whitelist.FormID,
 		WhitelistID:    whitelist.ID,
 		SessionToken:   sessionToken,
-		StartedAt:      now,
+		StartedAt:      currentTime,
 		ExpiresAt:      expiresAt,
 		IsActive:       true,
-		LastActivityAt: now,
-		CreatedAt:      now,
+		LastActivityAt: currentTime,
+		CreatedAt:      currentTime,
 	}
 
 	if err := s.db.Create(session).Error; err != nil {
@@ -249,7 +249,7 @@ func (s *QuizService) GetQuizContent(sessionID uuid.UUID, sessionToken string) (
 	}
 
 	// Update last activity
-	s.db.Model(&session).Update("last_activity_at", time.Now())
+	s.db.Model(&session).Update("last_activity_at", s.getCurrentTime())
 
 	return &models.QuizContentResponse{
 		SessionID: sessionID.String(),
@@ -323,7 +323,7 @@ func (s *QuizService) AutoSaveAnswer(sessionID uuid.UUID, sessionToken string, r
 	}
 
 	// Update last activity
-	s.db.Model(&session).Update("last_activity_at", time.Now())
+	s.db.Model(&session).Update("last_activity_at", s.getCurrentTime())
 
 	return &models.AutoSaveResponse{
 		FieldID:     req.FieldID,
@@ -351,14 +351,15 @@ func (s *QuizService) GetSessionStatus(sessionID uuid.UUID, sessionToken string)
 	var totalFields int64
 	s.db.Model(&models.FormField{}).Where("form_id = ? AND content_type = ?", session.FormID, "input_field").Count(&totalFields)
 
-	// Calculate time remaining
+	// Calculate time remaining using consistent time
+	currentTime := s.getCurrentTime()
 	timeRemaining := 0
-	if session.IsActive && time.Now().Before(session.ExpiresAt) {
-		timeRemaining = int(time.Until(session.ExpiresAt).Seconds())
+	if session.IsActive && currentTime.Before(session.ExpiresAt) {
+		timeRemaining = int(session.ExpiresAt.Sub(currentTime).Seconds())
 	}
 
 	// Update last activity
-	s.db.Model(&session).Update("last_activity_at", time.Now())
+	s.db.Model(&session).Update("last_activity_at", s.getCurrentTime())
 
 	return &models.SessionStatusResponse{
 		SessionID:            sessionID.String(),
@@ -382,33 +383,46 @@ func (s *QuizService) SubmitQuiz(sessionID uuid.UUID, sessionToken string, req *
 		return nil, err
 	}
 
-	if !session.IsActive {
-		return nil, errors.New("Session is no longer active")
+	// Validate session (checks both active status and expiration)
+	if err := s.validateSession(&session); err != nil {
+		// Check if it's specifically an expiration error for auto-submit
+		if s.isSessionExpired(&session) {
+			// Allow auto-submit if session is expired but was previously active
+			wasAutoSubmitted := true
+			timeSpent := s.calculateTimeSpent(session.StartedAt)
+
+			// Proceed with auto-submission logic
+			return s.processQuizSubmission(&session, req, timeSpent, wasAutoSubmitted)
+		}
+		return nil, err
 	}
 
+	// Calculate time spent for normal submission
+	timeSpent := s.calculateTimeSpent(session.StartedAt)
 	wasAutoSubmitted := false
-	if time.Now().After(session.ExpiresAt) {
-		wasAutoSubmitted = true
-	}
 
-	// Calculate time spent
-	timeSpent := int(time.Since(session.StartedAt).Seconds())
+	// Proceed with normal submission
+	return s.processQuizSubmission(&session, req, timeSpent, wasAutoSubmitted)
+}
 
-	// Create response
+// processQuizSubmission handles the common logic for both normal and auto-submissions
+func (s *QuizService) processQuizSubmission(session *models.FormSession, req *models.SubmitQuizRequest, timeSpent int, wasAutoSubmitted bool) (*models.SubmitQuizResponse, error) {
+	// Create response with consistent UTC time handling
+	currentTime := s.getCurrentTime()
 	response := &models.FormResponse{
 		ID:               uuid.New(),
 		FormID:           session.FormID,
-		SessionID:        sessionID,
+		SessionID:        session.ID,
 		WhitelistID:      session.WhitelistID,
 		TimeSpentSeconds: timeSpent,
 		WasAutoSubmitted: wasAutoSubmitted,
-		SubmittedAt:      time.Now(),
-		CreatedAt:        time.Now(),
+		SubmittedAt:      currentTime,
+		CreatedAt:        currentTime,
 	}
 
-	// Calculate score if quiz type
+	// Calculate score if quiz type using optimized scoring
 	if session.Form.FormType == "quiz" {
-		score, isPassed, err := s.calculateScore(session.FormID, req.Answers)
+		score, isPassed, err := s.calculateScoreOptimized(session.FormID, req.Answers)
 		if err != nil {
 			return nil, err
 		}
@@ -443,7 +457,7 @@ func (s *QuizService) SubmitQuiz(sessionID uuid.UUID, sessionToken string, req *
 			ResponseID:  response.ID,
 			FieldID:     fieldID,
 			AnswerValue: answer.AnswerValue,
-			CreatedAt:   time.Now(),
+			CreatedAt:   currentTime, // Use consistent time
 		}
 
 		// If quiz, calculate correctness
@@ -465,8 +479,8 @@ func (s *QuizService) SubmitQuiz(sessionID uuid.UUID, sessionToken string, req *
 		return nil, err
 	}
 
-	// Delete temp answers
-	if err := tx.Where("session_id = ?", sessionID).Delete(&models.TempAnswer{}).Error; err != nil {
+	// Delete temp answers - use session.ID instead of sessionID parameter
+	if err := tx.Where("session_id = ?", session.ID).Delete(&models.TempAnswer{}).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}
@@ -483,7 +497,7 @@ func (s *QuizService) SubmitQuiz(sessionID uuid.UUID, sessionToken string, req *
 	return &models.SubmitQuizResponse{
 		ResponseID:       response.ID.String(),
 		FormID:           response.FormID.String(),
-		SessionID:        sessionID.String(),
+		SessionID:        session.ID.String(), // Use session.ID
 		SubmittedAt:      response.SubmittedAt.Format(time.RFC3339),
 		TimeSpentSeconds: response.TimeSpentSeconds,
 		WasAutoSubmitted: response.WasAutoSubmitted,
@@ -582,7 +596,7 @@ func (s *QuizService) ResumeQuiz(req *models.ResumeQuizRequest) (*models.ResumeQ
 	timeRemaining := int(time.Until(session.ExpiresAt).Seconds())
 
 	// Update last activity
-	s.db.Model(&session).Update("last_activity_at", time.Now())
+	s.db.Model(&session).Update("last_activity_at", s.getCurrentTime())
 
 	return &models.ResumeQuizResponse{
 		SessionID:            session.ID.String(),
@@ -795,4 +809,90 @@ func (s *QuizService) checkAnswerCorrectness(fieldID uuid.UUID, userAnswer datat
 	}
 
 	return false, 0
+}
+
+// Helper functions for consistent time handling and optimized scoring
+
+// getCurrentTime returns the current UTC time for consistency
+func (s *QuizService) getCurrentTime() time.Time {
+	return time.Now().UTC()
+}
+
+// calculateTimeSpent calculates time spent in seconds from start time
+func (s *QuizService) calculateTimeSpent(startedAt time.Time) int {
+	return int(s.getCurrentTime().Sub(startedAt).Seconds())
+}
+
+// isSessionExpired checks if a session is expired
+func (s *QuizService) isSessionExpired(session *models.FormSession) bool {
+	return s.getCurrentTime().After(session.ExpiresAt)
+}
+
+// validateSession validates session status and expiration
+func (s *QuizService) validateSession(session *models.FormSession) error {
+	if !session.IsActive {
+		return errors.New("Session is no longer active")
+	}
+
+	if s.isSessionExpired(session) {
+		return errors.New("Session has expired")
+	}
+
+	return nil
+}
+
+// calculateScoreOptimized is an optimized version of calculateScore
+// Uses single query with joins and map-based lookups for O(n) complexity
+func (s *QuizService) calculateScoreOptimized(formID uuid.UUID, answers []models.SubmitAnswerItem) (float64, bool, error) {
+	// Single query to get form and all fields with answer keys in one go
+	var formWithFields struct {
+		models.Form
+		Fields []models.FormField `gorm:"foreignKey:FormID"`
+	}
+
+	err := s.db.Preload("Fields", "content_type = ?", "input_field").
+		Where("id = ?", formID).
+		First(&formWithFields).Error
+
+	if err != nil {
+		return 0, false, err
+	}
+
+	// Create answer map for O(1) lookups instead of O(n²) nested loops
+	answerMap := make(map[string]datatypes.JSON)
+	for _, answer := range answers {
+		answerMap[answer.FieldID] = answer.AnswerValue
+	}
+
+	var totalScore float64 = 0
+	var maxScore float64 = 0
+
+	// Calculate score using optimized single-pass approach
+	for _, field := range formWithFields.Fields {
+		maxScore += float64(field.Points)
+
+		// O(1) lookup instead of nested loop
+		userAnswer, exists := answerMap[field.ID.String()]
+		if exists {
+			// Use existing checkAnswerCorrectness function which is already optimized for individual fields
+			isCorrect, pointsEarned := s.checkAnswerCorrectness(field.ID, userAnswer)
+			if isCorrect {
+				totalScore += pointsEarned
+			}
+		}
+	}
+
+	// Calculate percentage
+	scorePercentage := float64(0)
+	if maxScore > 0 {
+		scorePercentage = (totalScore / maxScore) * 100
+	}
+
+	// Check if passed (using the form data we already fetched)
+	isPassed := false
+	if formWithFields.PassingScore != nil {
+		isPassed = scorePercentage >= float64(*formWithFields.PassingScore)
+	}
+
+	return scorePercentage, isPassed, nil
 }

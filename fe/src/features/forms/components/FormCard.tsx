@@ -1,12 +1,5 @@
 import type { FormSummary } from '../types';
 
-// Helper function to extract plain text from HTML
-const getPlainText = (html: string) => {
-  const div = document.createElement('div');
-  div.innerHTML = html || '';
-  return div.textContent || div.innerText || '';
-};
-
 interface FormCardProps {
   form: FormSummary;
   onDelete?: (formId: string) => void;

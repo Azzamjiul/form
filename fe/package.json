@@ -20,6 +20,8 @@
     "@tiptap/extension-underline": "^3.10.1",
     "@tiptap/react": "^3.10.1",
     "@tiptap/starter-kit": "^3.10.1",
+    "@types/dompurify": "^3.0.5",
+    "dompurify": "^3.3.0",
     "ky": "^1.11.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

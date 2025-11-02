@@ -194,12 +194,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     editorProps: {
       attributes: {
         class: 'focus:outline-none min-h-[40px] outline-none',
-        style: {
-          fontSize: 'inherit',
-          color: 'inherit',
-          fontWeight: 'inherit',
-          lineHeight: 'inherit',
-        }
+        style: 'font-size: inherit; color: inherit; font-weight: inherit; line-height: inherit;'
       }
     }
   });
@@ -305,7 +300,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             style={{
               top: style?.padding === '8px 0' ? '8px' :
                   style?.padding === '12px 0' ? '12px' : '8px',
-              left: style?.padding?.includes('0') ? '0' : '8px',
+              left: style?.padding?.toString().includes('0') ? '0' : '8px',
               fontSize: style?.fontSize,
               fontWeight: style?.fontWeight,
               color: style?.color,

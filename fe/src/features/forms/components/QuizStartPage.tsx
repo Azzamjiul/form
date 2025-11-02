@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { whitelistApi } from "../api/whitelist";
 import { quizApi } from "../api/quiz";
 import type { ValidateTokenResponse, StartQuizResponse } from "../types";
+import { processContent } from "../../../utils/sanitize";
 
 interface QuizStartPageProps {
   accessToken: string;
@@ -142,7 +143,9 @@ export const QuizStartPage = ({
         <div className="text-center mb-8">
           <h1
             className="text-3xl font-bold text-gray-900"
-            dangerouslySetInnerHTML={{ __html: validation.form?.title || '' }}
+            dangerouslySetInnerHTML={{
+              __html: processContent(validation.form?.title || '', true)
+            }}
           />
           <p className="mt-2 text-sm text-gray-600">
             Welcome, {validation.name}!

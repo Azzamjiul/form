@@ -2,15 +2,21 @@ import { useState, useEffect, useCallback } from 'react';
 import { quizApi } from '../api/quiz';
 import type { StartQuizResponse, QuizContentResponse, SubmitQuizResponse } from '../types';
 import { QuizTimer } from './QuizTimer';
+import { sanitizeHTML, processContent } from '../../../utils/sanitize';
 
 interface QuizTakingInterfaceProps {
   sessionData: StartQuizResponse;
   onQuizCompleted: (result: SubmitQuizResponse) => void;
+  initialAnswers?: Record<string, any>;
 }
 
-export const QuizTakingInterface = ({ sessionData, onQuizCompleted }: QuizTakingInterfaceProps) => {
+export const QuizTakingInterface = ({
+  sessionData,
+  onQuizCompleted,
+  initialAnswers = {}
+}: QuizTakingInterfaceProps) => {
   const [quizContent, setQuizContent] = useState<QuizContentResponse | null>(null);
-  const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [answers, setAnswers] = useState<Record<string, any>>(initialAnswers);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -114,6 +120,8 @@ export const QuizTakingInterface = ({ sessionData, onQuizCompleted }: QuizTaking
   };
 
   const handleTimeExpired = useCallback(() => {
+    // Clear session token when time expires
+    localStorage.removeItem('quiz_session_token');
     // Auto-submit when time expires
     handleSubmit();
   }, [answers, quizContent]);
@@ -177,7 +185,9 @@ export const QuizTakingInterface = ({ sessionData, onQuizCompleted }: QuizTaking
             <div>
               <h1
                 className="text-2xl font-bold text-gray-900"
-                dangerouslySetInnerHTML={{ __html: quizContent.form.title }}
+                dangerouslySetInnerHTML={{
+                  __html: processContent(quizContent.form.title, true)
+                }}
               />
               <p className="text-sm text-gray-500 mt-1">
                 Section {currentSectionIndex + 1} of {totalSections}: {currentSection.title}
@@ -210,13 +220,21 @@ export const QuizTakingInterface = ({ sessionData, onQuizCompleted }: QuizTaking
               <div key={field.field_id} className="border-b border-gray-200 pb-6 last:border-0">
                 <label className="block mb-2">
                   <span className="text-gray-900 font-medium">
-                    {index + 1}. {field.label}
+                    {index + 1}.{' '}
+                    <span
+                      dangerouslySetInnerHTML={{
+                        __html: processContent(field.label, true)
+                      }}
+                    />
                     {field.is_required && <span className="text-red-500 ml-1">*</span>}
                   </span>
                   {field.description && (
-                    <span className="block text-sm text-gray-500 mt-1">
-                      {field.description}
-                    </span>
+                    <span
+                      className="block text-sm text-gray-500 mt-1"
+                      dangerouslySetInnerHTML={{
+                        __html: processContent(field.description, true)
+                      }}
+                    />
                   )}
                 </label>
 
@@ -284,7 +302,11 @@ export const QuizTakingInterface = ({ sessionData, onQuizCompleted }: QuizTaking
                           required={field.is_required}
                         />
                         <label htmlFor={`${field.field_id}-${option.id}`} className="text-gray-700">
-                          {option.label}
+                          <span
+                            dangerouslySetInnerHTML={{
+                              __html: processContent(option.label, true)
+                            }}
+                          />
                         </label>
                       </div>
                     ))}
@@ -319,7 +341,11 @@ export const QuizTakingInterface = ({ sessionData, onQuizCompleted }: QuizTaking
                             className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 rounded"
                           />
                           <label htmlFor={`${field.field_id}-${option.id}`} className="text-gray-700">
-                            {option.label}
+                            <span
+                              dangerouslySetInnerHTML={{
+                                __html: processContent(option.label, true)
+                              }}
+                            />
                           </label>
                         </div>
                       );
@@ -337,9 +363,13 @@ export const QuizTakingInterface = ({ sessionData, onQuizCompleted }: QuizTaking
                   >
                     <option value="">Select an option</option>
                     {field.options.map((option) => (
-                      <option key={option.id} value={option.id}>
-                        {option.label}
-                      </option>
+                      <option
+                        key={option.id}
+                        value={option.id}
+                        dangerouslySetInnerHTML={{
+                          __html: sanitizeHTML(option.label)
+                        }}
+                      />
                     ))}
                   </select>
                 )}
