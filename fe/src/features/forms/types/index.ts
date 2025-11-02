@@ -318,6 +318,8 @@ export interface WhitelistEntryListItem {
   is_expired: boolean;
   can_attempt: boolean;
   created_at: string;
+  access_token: string;
+  quiz_url: string;
 }
 
 export interface WhitelistListData {
@@ -405,8 +407,13 @@ export interface QuizFieldContent {
   content_type: string;
   field_type?: string;
   label: string;
+  description?: string;
   is_required: boolean;
   order_in_section: number;
+  options?: Array<{ id: string; label: string }>;
+  min_value?: number;
+  max_value?: number;
+  step?: number;
 }
 
 export interface StartQuizData {

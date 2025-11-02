@@ -14,6 +14,7 @@ type Config struct {
 	JWTRefreshSecret    string
 	AccessTokenExpiry   string
 	RefreshTokenExpiry  string
+	FrontEndUrl string
 }
 
 func LoadConfig() *Config {
@@ -29,6 +30,7 @@ func LoadConfig() *Config {
 		JWTRefreshSecret:   getEnv("JWT_REFRESH_SECRET", "your-refresh-secret-key"),
 		AccessTokenExpiry:  getEnv("ACCESS_TOKEN_EXPIRY", "15m"),
 		RefreshTokenExpiry: getEnv("REFRESH_TOKEN_EXPIRY", "168h"),
+		FrontEndUrl: getEnv("FRONT_END_URL", "http://localhost:5173"),
 	}
 }
 

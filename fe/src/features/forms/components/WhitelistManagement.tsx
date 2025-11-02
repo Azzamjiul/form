@@ -307,7 +307,7 @@ export const WhitelistManagement = ({ formId }: WhitelistManagementProps) => {
                           <button
                             onClick={() =>
                               copyToClipboard(
-                                `http://localhost:3000/quiz/${entry.whitelist_id}`,
+                                entry.quiz_url,
                                 entry.whitelist_id,
                               )
                             }

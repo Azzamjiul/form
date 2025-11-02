@@ -75,6 +75,8 @@ type WhitelistEntryListItem struct {
 	IsExpired      bool   `json:"is_expired"`
 	CanAttempt     bool   `json:"can_attempt"`
 	CreatedAt      string `json:"created_at"`
+	AccessToken    string `json:"access_token"`
+	QuizURL        string `json:"quiz_url"`
 }
 
 type WhitelistListResponse struct {

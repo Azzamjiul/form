@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"form-api/config"
 	"form-api/models"
 	"time"
 
@@ -14,12 +15,14 @@ import (
 )
 
 type WhitelistService struct {
-	db *gorm.DB
+	db     *gorm.DB
+	config *config.Config
 }
 
-func NewWhitelistService(db *gorm.DB) *WhitelistService {
+func NewWhitelistService(db *gorm.DB, cfg *config.Config) *WhitelistService {
 	return &WhitelistService{
-		db: db,
+		db:     db,
+		config: cfg,
 	}
 }
 
@@ -326,7 +329,7 @@ func (s *WhitelistService) ValidateAccessToken(accessToken string) (*models.Vali
 // Helper functions to build responses
 
 func (s *WhitelistService) buildWhitelistEntryResponse(w *models.FormWhitelist) *models.WhitelistEntryResponse {
-	quizURL := fmt.Sprintf("http://localhost:3000/quiz/%s", w.AccessToken)
+	quizURL := fmt.Sprintf("%s/quiz/%s", s.config.FrontEndUrl, w.AccessToken)
 
 	return &models.WhitelistEntryResponse{
 		WhitelistID:    w.ID.String(),
@@ -370,6 +373,7 @@ func (s *WhitelistService) buildWhitelistEntryDetailResponse(w *models.FormWhite
 func (s *WhitelistService) buildWhitelistEntryListItem(w *models.FormWhitelist) models.WhitelistEntryListItem {
 	isExpired := time.Now().After(w.ExpiresAt)
 	canAttempt := !isExpired && w.AttemptsUsed < w.MaxAttempts
+	quizURL := fmt.Sprintf("%s/quiz/%s", s.config.FrontEndUrl, w.AccessToken)
 
 	return models.WhitelistEntryListItem{
 		WhitelistID:    w.ID.String(),
@@ -382,5 +386,7 @@ func (s *WhitelistService) buildWhitelistEntryListItem(w *models.FormWhitelist) 
 		IsExpired:      isExpired,
 		CanAttempt:     canAttempt,
 		CreatedAt:      w.CreatedAt.Format(time.RFC3339),
+		AccessToken:    w.AccessToken,
+		QuizURL:        quizURL,
 	}
 }

@@ -195,6 +195,11 @@ export const QuizTakingInterface = ({ sessionData, onQuizCompleted }: QuizTaking
                     {index + 1}. {field.label}
                     {field.is_required && <span className="text-red-500 ml-1">*</span>}
                   </span>
+                  {field.description && (
+                    <span className="block text-sm text-gray-500 mt-1">
+                      {field.description}
+                    </span>
+                  )}
                 </label>
 
                 {/* Text input */}
@@ -245,32 +250,127 @@ export const QuizTakingInterface = ({ sessionData, onQuizCompleted }: QuizTaking
                   />
                 )}
 
-                {/* Multiple choice */}
-                {(field.field_type === 'multiple_choice' || field.field_type === 'single_choice') && (
+                {/* Multiple choice / Single choice */}
+                {(field.field_type === 'multiple_choice' || field.field_type === 'single_choice') && field.options && (
                   <div className="space-y-2">
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        name={field.field_id}
-                        value="option1"
-                        checked={answers[field.field_id] === 'option1'}
-                        onChange={(e) => handleAnswerChange(field.field_id, e.target.value)}
-                        className="mr-2"
-                      />
-                      <label>Option 1</label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        name={field.field_id}
-                        value="option2"
-                        checked={answers[field.field_id] === 'option2'}
-                        onChange={(e) => handleAnswerChange(field.field_id, e.target.value)}
-                        className="mr-2"
-                      />
-                      <label>Option 2</label>
+                    {field.options.map((option) => (
+                      <div key={option.id} className="flex items-center">
+                        <input
+                          type="radio"
+                          id={`${field.field_id}-${option.id}`}
+                          name={field.field_id}
+                          value={option.id}
+                          checked={answers[field.field_id] === option.id}
+                          onChange={(e) => handleAnswerChange(field.field_id, e.target.value)}
+                          className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500"
+                          required={field.is_required}
+                        />
+                        <label htmlFor={`${field.field_id}-${option.id}`} className="text-gray-700">
+                          {option.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Checkbox */}
+                {field.field_type === 'checkbox' && field.options && (
+                  <div className="space-y-2">
+                    {field.options.map((option) => {
+                      const selectedOptions = answers[field.field_id] || [];
+                      return (
+                        <div key={option.id} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id={`${field.field_id}-${option.id}`}
+                            value={option.id}
+                            checked={Array.isArray(selectedOptions) && selectedOptions.includes(option.id)}
+                            onChange={(e) => {
+                              const currentValues = Array.isArray(answers[field.field_id])
+                                ? [...answers[field.field_id]]
+                                : [];
+                              if (e.target.checked) {
+                                handleAnswerChange(field.field_id, [...currentValues, option.id]);
+                              } else {
+                                handleAnswerChange(
+                                  field.field_id,
+                                  currentValues.filter((v: string) => v !== option.id)
+                                );
+                              }
+                            }}
+                            className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 rounded"
+                          />
+                          <label htmlFor={`${field.field_id}-${option.id}`} className="text-gray-700">
+                            {option.label}
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Dropdown */}
+                {field.field_type === 'dropdown' && field.options && (
+                  <select
+                    value={answers[field.field_id] || ''}
+                    onChange={(e) => handleAnswerChange(field.field_id, e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required={field.is_required}
+                  >
+                    <option value="">Select an option</option>
+                    {field.options.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                )}
+
+                {/* Linear Scale */}
+                {field.field_type === 'linear_scale' && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      {Array.from(
+                        { length: (field.max_value || 10) - (field.min_value || 1) + 1 },
+                        (_, i) => (field.min_value || 1) + i
+                      ).map((value) => (
+                        <label key={value} className="flex flex-col items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name={field.field_id}
+                            value={value}
+                            checked={answers[field.field_id] === value.toString()}
+                            onChange={(e) => handleAnswerChange(field.field_id, e.target.value)}
+                            className="mb-1"
+                            required={field.is_required}
+                          />
+                          <span className="text-sm">{value}</span>
+                        </label>
+                      ))}
                     </div>
                   </div>
+                )}
+
+                {/* Date */}
+                {field.field_type === 'date' && (
+                  <input
+                    type="date"
+                    value={answers[field.field_id] || ''}
+                    onChange={(e) => handleAnswerChange(field.field_id, e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required={field.is_required}
+                  />
+                )}
+
+                {/* Time */}
+                {field.field_type === 'time' && (
+                  <input
+                    type="time"
+                    value={answers[field.field_id] || ''}
+                    onChange={(e) => handleAnswerChange(field.field_id, e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required={field.is_required}
+                  />
                 )}
               </div>
             ))}
