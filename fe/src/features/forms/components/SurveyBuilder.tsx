@@ -29,8 +29,7 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  // const [lastSavedAt] = useState<Date | null>(null);
+  const [justSaved, setJustSaved] = useState(false);
 
   // Transform form data into canvas items
   const transformFormToItems = useCallback((formData: FormWithSections): CanvasItem[] => {
@@ -232,6 +231,7 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
   // Debounced field update to backend
   const saveFieldToBackend = useCallback(async (fieldId: string, updates: Partial<CanvasItem>) => {
     try {
+      setIsSaving(true);
       const updatePayload: any = {};
 
       if (updates.title !== undefined) updatePayload.label = updates.title;
@@ -243,9 +243,14 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
       if (updates.points !== undefined) updatePayload.points = updates.points;
 
       await fieldsApi.updateField(formId, fieldId, updatePayload);
-      setHasUnsavedChanges(false);
+      setIsSaving(false);
+      setJustSaved(true);
+
+      // Hide success notification after 3 seconds
+      setTimeout(() => setJustSaved(false), 3000);
     } catch (error) {
       console.error('Failed to update field:', error);
+      setIsSaving(false);
     }
   }, [formId]);
 
@@ -260,7 +265,6 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
         item.id === itemId ? { ...item, ...updates } : item
       )
     );
-    setHasUnsavedChanges(true);
 
     // Skip auto-save for non-field items
     if (itemId === 'survey-header' || itemId.startsWith('section-') || itemId.startsWith('page-break-')) {
@@ -295,7 +299,6 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
     if (itemId === 'survey-header') return; // Cannot delete header
 
     setItems(prevItems => prevItems.filter(item => item.id !== itemId));
-    setHasUnsavedChanges(true);
 
     if (selectedItemId === itemId) {
       setSelectedItemId(null);
@@ -320,19 +323,10 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
         order: index
       }));
     });
-
-    setHasUnsavedChanges(true);
   }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Auto-save indicator */}
-      {isSaving && (
-        <div className="fixed top-16 right-4 bg-green-500 text-white px-3 py-1 rounded-lg text-sm z-50 shadow-lg">
-          Menyimpan...
-        </div>
-      )}
-
       {/* Main Canvas Container */}
       <div
         className="flex-1 bg-gray-50 overflow-y-auto overflow-x-hidden"
@@ -365,7 +359,8 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
             onReorderItems={handleReorderItems}
             onSetDraggedItem={setDraggedItemId}
             isCreating={isCreating}
-            hasUnsavedChanges={hasUnsavedChanges}
+            isSaving={isSaving}
+            justSaved={justSaved}
           />
         </div>
       </div>
