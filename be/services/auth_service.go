@@ -55,8 +55,14 @@ func (s *AuthService) Register(req *models.RegisterRequest) (*models.AuthRespons
 	}
 
 	// Generate tokens
-	accessExpiry, _ := utils.ParseDuration(s.config.AccessTokenExpiry)
-	refreshExpiry, _ := utils.ParseDuration(s.config.RefreshTokenExpiry)
+	accessExpiry, err := utils.ParseDuration(s.config.AccessTokenExpiry)
+	if err != nil {
+		return nil, errors.New("Invalid access token expiry configuration")
+	}
+	refreshExpiry, err := utils.ParseDuration(s.config.RefreshTokenExpiry)
+	if err != nil {
+		return nil, errors.New("Invalid refresh token expiry configuration")
+	}
 
 	accessToken, err := s.jwtUtil.GenerateAccessToken(user.ID.String(), user.Email, accessExpiry)
 	if err != nil {
@@ -105,8 +111,14 @@ func (s *AuthService) Login(req *models.LoginRequest) (*models.AuthResponse, err
 	}
 
 	// Generate tokens
-	accessExpiry, _ := utils.ParseDuration(s.config.AccessTokenExpiry)
-	refreshExpiry, _ := utils.ParseDuration(s.config.RefreshTokenExpiry)
+	accessExpiry, err := utils.ParseDuration(s.config.AccessTokenExpiry)
+	if err != nil {
+		return nil, errors.New("Invalid access token expiry configuration")
+	}
+	refreshExpiry, err := utils.ParseDuration(s.config.RefreshTokenExpiry)
+	if err != nil {
+		return nil, errors.New("Invalid refresh token expiry configuration")
+	}
 
 	accessToken, err := s.jwtUtil.GenerateAccessToken(user.ID.String(), user.Email, accessExpiry)
 	if err != nil {
@@ -149,8 +161,14 @@ func (s *AuthService) RefreshToken(req *models.RefreshTokenRequest) (*models.Aut
 	}
 
 	// Generate new tokens
-	accessExpiry, _ := utils.ParseDuration(s.config.AccessTokenExpiry)
-	refreshExpiry, _ := utils.ParseDuration(s.config.RefreshTokenExpiry)
+	accessExpiry, err := utils.ParseDuration(s.config.AccessTokenExpiry)
+	if err != nil {
+		return nil, errors.New("Invalid access token expiry configuration")
+	}
+	refreshExpiry, err := utils.ParseDuration(s.config.RefreshTokenExpiry)
+	if err != nil {
+		return nil, errors.New("Invalid refresh token expiry configuration")
+	}
 
 	accessToken, err := s.jwtUtil.GenerateAccessToken(user.ID.String(), user.Email, accessExpiry)
 	if err != nil {

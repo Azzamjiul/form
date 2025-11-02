@@ -28,7 +28,7 @@ func LoadConfig() *Config {
 		JWTSecret:          getEnv("JWT_SECRET", "your-secret-key"),
 		JWTRefreshSecret:   getEnv("JWT_REFRESH_SECRET", "your-refresh-secret-key"),
 		AccessTokenExpiry:  getEnv("ACCESS_TOKEN_EXPIRY", "15m"),
-		RefreshTokenExpiry: getEnv("REFRESH_TOKEN_EXPIRY", "7d"),
+		RefreshTokenExpiry: getEnv("REFRESH_TOKEN_EXPIRY", "168h"),
 	}
 }
 

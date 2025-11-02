@@ -171,7 +171,7 @@ DATABASE_URL=postgres://postgres:postgres@localhost:5432/form?sslmode=disable
 JWT_SECRET=your-secret-key
 JWT_REFRESH_SECRET=your-refresh-secret-key
 ACCESS_TOKEN_EXPIRY=15m
-REFRESH_TOKEN_EXPIRY=7d
+REFRESH_TOKEN_EXPIRY=168h
 ```
 
 ### Frontend (.env)
