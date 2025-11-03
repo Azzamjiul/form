@@ -10,6 +10,7 @@ import { SettingsPage } from "./pages/SettingsPage"
 import FormsPage from "./pages/FormsPage"
 import FormDetailPage from "./pages/FormDetailPage"
 import QuizTakingPage from "./pages/QuizTakingPage"
+import { AdminResultsPage } from "../features/forms/components/AdminResultsPage"
 
 export const AppRouter = () => {
   return (
@@ -25,6 +26,7 @@ export const AppRouter = () => {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/forms" element={<FormsPage />} />
         <Route path="/forms/:formId" element={<FormDetailPage />} />
+        <Route path="/forms/:formId/results" element={<AdminResultsPage />} />
         <Route path="/quiz/:accessToken" element={<QuizTakingPage />} />
       </Routes>
     </BrowserRouter>

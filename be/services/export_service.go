@@ -145,8 +145,8 @@ func (s *ExportService) generateCSVExport(form *models.Form, responses *models.R
 
 		row := []string{
 			response.ID,
-			response.RespondentName,
-			response.RespondentEmail,
+			response.Name,
+			response.Email,
 			score,
 			strconv.Itoa(response.MaxScore),
 			fmt.Sprintf("%.2f", response.Percentage),

@@ -8,7 +8,7 @@ import (
 type ResponseListRequest struct {
 	Page    int    `form:"page" binding:"min=1"`
 	Limit   int    `form:"limit" binding:"min=1,max=100"`
-	SortBy  string `form:"sort_by" binding:"omitempty,oneof=submitted_at score time_spent respondent_name"`
+	SortBy  string `form:"sort_by" binding:"omitempty,oneof=submitted_at score time_spent name"`
 	Order   string `form:"order" binding:"omitempty,oneof=asc desc"`
 	Search  string `form:"search"`
 	IsPassed *bool `form:"is_passed"` // Optional filter for pass/fail status
@@ -17,8 +17,8 @@ type ResponseListRequest struct {
 // ResponseListItem represents a single response in the list view
 type ResponseListItem struct {
 	ID               string     `json:"id"`
-	RespondentName   string     `json:"respondent_name"`
-	RespondentEmail  string     `json:"respondent_email"`
+	Name             string     `json:"name"`
+	Email            string     `json:"email"`
 	Score            *float64   `json:"score"`
 	MaxScore         int        `json:"max_score"`
 	Percentage       float64    `json:"percentage"`
@@ -26,6 +26,7 @@ type ResponseListItem struct {
 	TimeSpentSeconds int        `json:"time_spent_seconds"`
 	SubmittedAt      time.Time  `json:"submitted_at"`
 	WasAutoSubmitted bool       `json:"was_auto_submitted"`
+	IsFlagged        bool       `json:"is_flagged"`
 }
 
 // ResponseListResponse represents the response list API response

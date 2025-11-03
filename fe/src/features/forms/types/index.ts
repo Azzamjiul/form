@@ -525,7 +525,7 @@ export interface ResumeQuizRequest {
 }
 
 // Response types
-export type FormResponse = APIResponse<Form>;
+export type FormApiResponse = APIResponse<Form>;
 export type FormWithSectionsResponse = APIResponse<FormWithSections>;
 export type FormListResponse = APIResponse<FormListData>;
 export type PublishFormResponse = APIResponse<PublishFormData>;
@@ -565,3 +565,169 @@ export interface CanvasItem {
   isSelected?: boolean;
   isDragging?: boolean;
 }
+
+// Admin Results types
+export interface FormResponse {
+  response_id: string;
+  form_id: string;
+  session_id: string;
+  whitelist_id: string;
+  email?: string;
+  name?: string;
+  submitted_at: string;
+  time_spent_seconds: number;
+  score?: number;
+  is_passed?: boolean;
+  is_flagged: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FormResponseListItem {
+  id: string;
+  email?: string;
+  name?: string;
+  submitted_at: string;
+  time_spent_seconds: number;
+  score?: number;
+  is_passed?: boolean;
+  is_flagged: boolean;
+}
+
+export interface FormResponseDetail {
+  response_id: string;
+  form_id: string;
+  session_id: string;
+  whitelist_id: string;
+  email?: string;
+  name?: string;
+  submitted_at: string;
+  time_spent_seconds: number;
+  score?: number;
+  is_passed?: boolean;
+  is_flagged: boolean;
+  created_at: string;
+  updated_at: string;
+  form_info: {
+    form_id: string;
+    title: string;
+    form_type: string;
+    passing_score?: number;
+    total_points: number;
+  };
+  answers: Array<{
+    field_id: string;
+    label: string;
+    user_answer: any;
+    is_correct?: boolean;
+    points_earned?: number;
+    max_points?: number;
+    field_type?: string;
+  }>;
+}
+
+export interface FormResponseListData {
+  responses: FormResponseListItem[];
+  pagination: PaginationResponse;
+}
+
+export interface ResponseAnalytics {
+  total_responses: number;
+  average_score: number;
+  pass_rate: number;
+  average_time_seconds: number;
+  score_distribution: {
+    range: string;
+    count: number;
+    percentage: number;
+  }[];
+  completion_trend: Array<{
+    date: string;
+    count: number;
+  }>;
+}
+
+export interface QuestionAnalytics {
+  field_id: string;
+  label: string;
+  field_type: string;
+  total_responses: number;
+  correct_answers?: number;
+  accuracy_rate?: number;
+  answer_distribution: Array<{
+    option_label?: string;
+    answer_value?: string;
+    count: number;
+    percentage: number;
+  }>;
+}
+
+export interface SectionAnalytics {
+  section_id: string;
+  title: string;
+  average_score: number;
+  average_time_seconds: number;
+  total_responses: number;
+  question_analytics: QuestionAnalytics[];
+}
+
+export interface FormAnalytics {
+  total_responses: number;
+  average_score: number;
+  pass_rate: number;
+  average_time_seconds: number;
+  score_distribution: {
+    range: string;
+    count: number;
+    percentage: number;
+  }[];
+  question_analytics: QuestionAnalytics[];
+  section_analytics: SectionAnalytics[];
+  completion_trend: Array<{
+    date: string;
+    count: number;
+  }>;
+}
+
+export interface ExportOptions {
+  format: 'csv' | 'excel' | 'json';
+  include_analytics?: boolean;
+  date_range?: {
+    start_date: string;
+    end_date?: string;
+  };
+}
+
+// Request types for admin results
+export interface ResponseListParams {
+  page?: number;
+  per_page?: number;
+  sort_by?: 'submitted_at' | 'score' | 'time_spent';
+  order?: 'asc' | 'desc';
+  search?: string;
+  is_flagged?: boolean;
+  is_passed?: boolean;
+  date_from?: string;
+  date_to?: string;
+}
+
+export interface FlagResponseRequest {
+  is_flagged: boolean;
+  reason?: string;
+}
+
+export interface AnalyticsParams {
+  date_from?: string;
+  date_to?: string;
+}
+
+// Response types for admin results
+export type FormResponseListResponse = APIResponse<FormResponseListData>;
+export type FormResponseDetailResponse = APIResponse<FormResponseDetail>;
+export type FormAnalyticsResponse = APIResponse<FormAnalytics>;
+export type QuestionAnalyticsResponse = APIResponse<QuestionAnalytics[]>;
+export type SectionAnalyticsResponse = APIResponse<SectionAnalytics[]>;
+export type ExportResponse = APIResponse<{
+  message: string;
+  data: any;
+}>;

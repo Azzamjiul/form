@@ -240,3 +240,4 @@ swag init
 - **Metadata Fields**: Use `datatypes.JSON` type for flexible JSON storage (whitelist metadata, answer values)
 - kalo mau test cukup build aja, buat testing aku test lgsg sneidiri jadi ga perlu jalanin fe dan be server buat testing
 - always use makefiel for backend build or wag init or something
+- just make sure the buile backend and fronend success when you testing

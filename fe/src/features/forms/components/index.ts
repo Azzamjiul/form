@@ -34,3 +34,10 @@ export { QuizStartPage } from './QuizStartPage';
 export { QuizTimer } from './QuizTimer';
 export { QuizTakingInterface } from './QuizTakingInterface';
 export { QuizResultDisplay } from './QuizResultDisplay';
+
+// Admin Results components
+export { AdminResultsPage } from './AdminResultsPage';
+export { ResponseListTable } from './ResponseListTable';
+export { ResponseDetailsModal } from './ResponseDetailsModal';
+export { AnalyticsDashboard } from './AnalyticsDashboard';
+export { ExportMenu } from './ExportMenu';

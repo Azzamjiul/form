@@ -6,7 +6,8 @@ import { SurveyBuilder } from "../../features/forms/components/SurveyBuilder";
 import { TopNavigation } from "../../features/forms/components/TopNavigation";
 import { WhitelistManagement } from "../../features/forms/components/WhitelistManagement";
 import type { FormWithSections } from "../../features/forms/types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { BarChart3 } from "lucide-react";
 
 export default function FormDetailPage() {
   return (
@@ -20,7 +21,7 @@ function FormBuilderContent() {
   const { formId } = useParams<{ formId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'builder' | 'access'>('builder');
+  const [activeTab, setActiveTab] = useState<'builder' | 'access' | 'results'>('builder');
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["form", formId],
@@ -38,6 +39,13 @@ function FormBuilderContent() {
       queryClient.invalidateQueries({ queryKey: ["form", formId] });
     },
   });
+
+  // Navigate to results page when results tab is selected
+  useEffect(() => {
+    if (activeTab === 'results') {
+      navigate(`/forms/${formId}/results`);
+    }
+  }, [activeTab, formId, navigate]);
 
   const handleFormUpdate = (data: {
     title?: string;
@@ -104,6 +112,17 @@ function FormBuilderContent() {
             }`}
           >
             Access Control
+          </button>
+          <button
+            onClick={() => setActiveTab('results')}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === 'results'
+                ? 'border-purple-600 text-purple-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+            }`}
+          >
+            <BarChart3 className="h-4 w-4" />
+            Results
           </button>
         </div>
       </div>

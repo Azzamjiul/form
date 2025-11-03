@@ -4,7 +4,7 @@ import type {
   UpdateFormRequest,
   DuplicateFormRequest,
   FormListParams,
-  FormResponse,
+  FormApiResponse,
   FormWithSectionsResponse,
   FormListResponse,
   PublishFormResponse,
@@ -14,10 +14,10 @@ export const formsApi = {
   /**
    * Create a new form
    */
-  createForm: async (data: CreateFormRequest): Promise<FormResponse> => {
+  createForm: async (data: CreateFormRequest): Promise<FormApiResponse> => {
     const response = await api.post('forms', {
       json: data,
-    }).json<FormResponse>();
+    }).json<FormApiResponse>();
 
     return response;
   },
@@ -37,10 +37,10 @@ export const formsApi = {
   /**
    * Update form settings
    */
-  updateForm: async (formId: string, data: UpdateFormRequest): Promise<FormResponse> => {
+  updateForm: async (formId: string, data: UpdateFormRequest): Promise<FormApiResponse> => {
     const response = await api.put(`forms/${formId}`, {
       json: data,
-    }).json<FormResponse>();
+    }).json<FormApiResponse>();
 
     return response;
   },
@@ -74,10 +74,10 @@ export const formsApi = {
   /**
    * Duplicate form with all settings and questions
    */
-  duplicateForm: async (formId: string, data: DuplicateFormRequest): Promise<FormResponse> => {
+  duplicateForm: async (formId: string, data: DuplicateFormRequest): Promise<FormApiResponse> => {
     const response = await api.post(`forms/${formId}/duplicate`, {
       json: data,
-    }).json<FormResponse>();
+    }).json<FormApiResponse>();
 
     return response;
   },

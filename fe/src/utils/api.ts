@@ -104,3 +104,6 @@ export const api = ky.create({
     ],
   },
 });
+
+// Export as kyInstance for compatibility
+export const kyInstance = api;

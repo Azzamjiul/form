@@ -56,9 +56,10 @@ func (s *FormResponseService) GetFormResponses(formID uuid.UUID, req *models.Res
 			fr.time_spent_seconds,
 			fr.submitted_at,
 			fr.was_auto_submitted,
-			fw.name as respondent_name,
-			fw.email as respondent_email,
-			0 as max_score
+			fw.name as name,
+			fw.email as email,
+			0 as max_score,
+			false as is_flagged
 		`).
 		Joins("JOIN form_whitelist fw ON fr.whitelist_id = fw.id").
 		Where("fr.form_id = ?", formID)
@@ -94,7 +95,7 @@ func (s *FormResponseService) GetFormResponses(formID uuid.UUID, req *models.Res
 
 	// Add sorting
 	switch req.SortBy {
-	case "respondent_name":
+	case "name":
 		query = query.Order("fw.name " + req.Order)
 	case "score":
 		query = query.Order("fr.score " + req.Order)

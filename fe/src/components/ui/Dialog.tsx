@@ -98,3 +98,47 @@ export const Dialog: React.FC<DialogProps> = ({
 
   return createPortal(dialogContent, document.body);
 };
+
+export const DialogTrigger: React.FC<{
+  children: React.ReactNode;
+  onClick: () => void;
+}> = ({ children, onClick }) => {
+  return (
+    <button onClick={onClick}>
+      {children}
+    </button>
+  );
+};
+
+export const DialogContent: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+}> = ({ children, className = '' }) => {
+  return (
+    <div className={className}>
+      {children}
+    </div>
+  );
+};
+
+export const DialogHeader: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+}> = ({ children, className = '' }) => {
+  return (
+    <div className={`mb-4 ${className}`}>
+      {children}
+    </div>
+  );
+};
+
+export const DialogTitle: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+}> = ({ children, className = '' }) => {
+  return (
+    <h2 className={`text-lg font-semibold text-gray-900 ${className}`}>
+      {children}
+    </h2>
+  );
+};

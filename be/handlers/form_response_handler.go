@@ -29,7 +29,7 @@ func NewFormResponseHandler(responseService *services.FormResponseService) *Form
 // @Param form_id path string true "Form ID"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
-// @Param sort_by query string false "Sort by field" Enums(submitted_at,score,time_spent,respondent_name) default(submitted_at)
+// @Param sort_by query string false "Sort by field" Enums(submitted_at,score,time_spent,name) default(submitted_at)
 // @Param order query string false "Sort order" Enums(asc,desc) default(desc)
 // @Param search query string false "Search by respondent name or email"
 // @Param is_passed query bool false "Filter by pass/fail status"
