@@ -32,3 +32,4 @@ go.work
 
 # build result
 form-api
+tmp/

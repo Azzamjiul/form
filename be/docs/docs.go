@@ -1678,7 +1678,7 @@ const docTemplate = `{
                             "submitted_at",
                             "score",
                             "time_spent",
-                            "respondent_name"
+                            "name"
                         ],
                         "type": "string",
                         "default": "submitted_at",

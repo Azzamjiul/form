@@ -1408,7 +1408,7 @@ paths:
         - submitted_at
         - score
         - time_spent
-        - respondent_name
+        - name
         in: query
         name: sort_by
         type: string
