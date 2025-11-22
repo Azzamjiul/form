@@ -96,12 +96,12 @@ export const TitleDescriptionCard: React.FC<TitleDescriptionCardProps> = ({
         borderLeft: '4px solid #5F35F5',
         borderRadius: '8px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-        padding: '12px',
+        padding: isDragging ? '8px' : '12px', // Reduced padding during drag
         marginBottom: '16px',
-        minHeight: '80px',
+        minHeight: isDragging ? '60px' : '80px', // Reduced height during drag
         display: 'flex',
         flexDirection: 'column',
-        gap: '8px',
+        gap: isDragging ? '4px' : '8px', // Reduced gap during drag
         position: 'relative'
       }}
       onClick={onSelect}
@@ -112,76 +112,97 @@ export const TitleDescriptionCard: React.FC<TitleDescriptionCardProps> = ({
       onDrop={onDrop}
       onDragEnd={onDragEnd}
     >
-      {/* Top-right actions */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '12px',
-          right: '12px',
-          display: 'flex',
-          gap: '8px'
-        }}
-      >
-        <button
-          className="w-10 h-10 flex items-center justify-center bg-transparent border-none cursor-pointer rounded-md text-gray-600 hover:bg-gray-100 hover:text-purple-600 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation();
-            // TODO: Implement duplicate functionality
+      {/* Top-right actions - Hide during drag */}
+      {!isDragging && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '12px',
+            right: '12px',
+            display: 'flex',
+            gap: '8px'
           }}
-          title="Duplicate"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-          </svg>
-        </button>
-        <button
-          className="w-10 h-10 flex items-center justify-center bg-transparent border-none cursor-pointer rounded-md text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors"
-          onClick={handleDeleteClick}
-          title="Delete"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-        </button>
-      </div>
+          <button
+            className="w-10 h-10 flex items-center justify-center bg-transparent border-none cursor-pointer rounded-md text-gray-600 hover:bg-gray-100 hover:text-purple-600 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              // TODO: Implement duplicate functionality
+            }}
+            title="Duplicate"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+          </button>
+          <button
+            className="w-10 h-10 flex items-center justify-center bg-transparent border-none cursor-pointer rounded-md text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors"
+            onClick={handleDeleteClick}
+            title="Delete"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* Section Title */}
-      <RichTextEditor
-        content={title}
-        onChange={handleTitleChange}
-        placeholder="Section title"
-        showToolbar={true}
-        toolbarPosition="bottom"
-        style={{
-          fontSize: '16px',
-          fontWeight: 500,
-          color: '#202124',
-          lineHeight: 1.5,
-          borderBottom: '2px solid #5F35F5',
-          background: 'transparent',
-          fontFamily: 'inherit',
-        }}
-      />
+      {isDragging ? (
+        // Simplified view during drag - just display title text
+        <div
+          style={{
+            fontSize: '14px',
+            fontWeight: 500,
+            color: '#202124',
+            lineHeight: 1.5,
+            borderBottom: '2px solid #5F35F5',
+            padding: '4px 0'
+          }}
+        >
+          {title || 'Untitled Section'}
+        </div>
+      ) : (
+        // Full editor when not dragging
+        <RichTextEditor
+          content={title}
+          onChange={handleTitleChange}
+          placeholder="Section title"
+          showToolbar={true}
+          toolbarPosition="bottom"
+          style={{
+            fontSize: '16px',
+            fontWeight: 500,
+            color: '#202124',
+            lineHeight: 1.5,
+            borderBottom: '2px solid #5F35F5',
+            background: 'transparent',
+            fontFamily: 'inherit',
+          }}
+        />
+      )}
 
-      {/* Section Description */}
-      <RichTextEditor
-        content={description}
-        onChange={handleDescriptionChange}
-        placeholder="Section description (optional)"
-        showToolbar={true}
-        toolbarPosition="bottom"
-        style={{
-          fontSize: '14px',
-          fontWeight: 400,
-          color: '#808080',
-          lineHeight: 1.5,
-          border: 'none',
-          background: 'transparent',
-          fontFamily: 'inherit',
-          padding: '12px 0',
-          borderBottom: '1px solid #E8E8E8',
-        }}
-      />
+      {/* Section Description - Hide during drag */}
+      {!isDragging && description && (
+        <RichTextEditor
+          content={description}
+          onChange={handleDescriptionChange}
+          placeholder="Section description (optional)"
+          showToolbar={true}
+          toolbarPosition="bottom"
+          style={{
+            fontSize: '14px',
+            fontWeight: 400,
+            color: '#808080',
+            lineHeight: 1.5,
+            border: 'none',
+            background: 'transparent',
+            fontFamily: 'inherit',
+            padding: '12px 0',
+            borderBottom: '1px solid #E8E8E8',
+          }}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { SurveyHeaderCard } from './SurveyHeaderCard';
 import { TitleDescriptionCard } from './TitleDescriptionCard';
 import { QuestionCard } from './QuestionCard';
@@ -41,6 +41,8 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
   justSaved
 }) => {
   const [dragOverItemId, setDragOverItemId] = useState<string | null>(null);
+  const [dragOverPosition, setDragOverPosition] = useState<'above' | 'below' | null>(null);
+  const dragTimeoutRef = useRef<number | null>(null);
 
   // Handle drag start
   const handleDragStart = useCallback((itemId: string) => {
@@ -48,17 +50,37 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
     setDragOverItemId(null);
   }, [onSetDraggedItem]);
 
-  // Handle drag over
+  // Handle drag over with debouncing for better performance
   const handleDragOver = useCallback((e: React.DragEvent, itemId: string) => {
     e.preventDefault();
     if (draggedItemId && draggedItemId !== itemId) {
-      setDragOverItemId(itemId);
+      // Clear existing timeout
+      if (dragTimeoutRef.current) {
+        clearTimeout(dragTimeoutRef.current);
+      }
+
+      // Debounce drag over updates to reduce re-renders
+      dragTimeoutRef.current = setTimeout(() => {
+        setDragOverItemId(itemId);
+
+        // Determine if we should insert above or below based on mouse position
+        const rect = e.currentTarget.getBoundingClientRect();
+        const midPoint = rect.top + rect.height / 2;
+        const position = e.clientY < midPoint ? 'above' : 'below';
+        setDragOverPosition(position);
+      }, 50); // 50ms debounce
     }
   }, [draggedItemId]);
 
   // Handle drag leave
   const handleDragLeave = useCallback(() => {
+    // Clear any pending timeout
+    if (dragTimeoutRef.current) {
+      clearTimeout(dragTimeoutRef.current);
+      dragTimeoutRef.current = null;
+    }
     setDragOverItemId(null);
+    setDragOverPosition(null);
   }, []);
 
   // Handle drop
@@ -68,12 +90,19 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
       onReorderItems(draggedItemId, targetId);
     }
     setDragOverItemId(null);
+    setDragOverPosition(null);
     onSetDraggedItem(null);
   }, [draggedItemId, onReorderItems, onSetDraggedItem]);
 
   // Handle drag end
   const handleDragEnd = useCallback(() => {
+    // Clear any pending timeout
+    if (dragTimeoutRef.current) {
+      clearTimeout(dragTimeoutRef.current);
+      dragTimeoutRef.current = null;
+    }
     setDragOverItemId(null);
+    setDragOverPosition(null);
     onSetDraggedItem(null);
   }, [onSetDraggedItem]);
 
@@ -170,6 +199,7 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
     selectedItemId,
     draggedItemId,
     dragOverItemId,
+    dragOverPosition,
     onSelectItem,
     onUpdateItem,
     onDeleteItem,
@@ -220,31 +250,62 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
 
   return (
     <div className="flex flex-col" style={{ gap: '16px' }}>
-      {sortedItems.map((item) => (
-        <React.Fragment key={item.id}>
-          {/* Card with Floating Add Button */}
-          <div className="relative">
-            {renderCard(item)}
+      {sortedItems.map((item) => {
+        const isDragging = draggedItemId === item.id;
+        const isDragOver = dragOverItemId === item.id;
+        const showInsertionAbove = isDragOver && dragOverPosition === 'above' && !isDragging;
+        const showInsertionBelow = isDragOver && dragOverPosition === 'below' && !isDragging;
 
-            {/* Floating Add Element Section - positioned to the right of focused card */}
-            {selectedItemId === item.id && (
+        return (
+          <React.Fragment key={item.id}>
+            {/* Insertion Line Above */}
+            {showInsertionAbove && (
               <div
-                className="absolute left-full ml-2 z-30"
+                className="w-full h-1 bg-purple-500 rounded-full opacity-80"
                 style={{
-                  animation: 'slideInRight 0.2s ease-out',
-                  top: item.type === 'header' ? '40px' : '0px' // Account for header's mt-10 (40px)
+                  transform: 'scaleX(0.95)',
+                  transition: 'all 0.2s ease-out',
+                  boxShadow: '0 2px 8px rgba(95, 53, 245, 0.3)'
                 }}
-              >
-                <AddElementSection
-                  onAddQuestion={(type) => onAddQuestion(type, item.id)}
-                  onAddSection={() => onAddSection(item.id)}
-                  isCreating={isCreating}
-                />
-              </div>
+              />
             )}
-          </div>
-        </React.Fragment>
-      ))}
+
+            {/* Card with Floating Add Button */}
+            <div className="relative">
+              {renderCard(item)}
+
+              {/* Floating Add Element Section - positioned to the right of focused card */}
+              {selectedItemId === item.id && !isDragging && (
+                <div
+                  className="absolute left-full ml-2 z-30"
+                  style={{
+                    animation: 'slideInRight 0.2s ease-out',
+                    top: item.type === 'header' ? '40px' : '0px' // Account for header's mt-10 (40px)
+                  }}
+                >
+                  <AddElementSection
+                    onAddQuestion={(type) => onAddQuestion(type, item.id)}
+                    onAddSection={() => onAddSection(item.id)}
+                    isCreating={isCreating}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Insertion Line Below */}
+            {showInsertionBelow && (
+              <div
+                className="w-full h-1 bg-purple-500 rounded-full opacity-80"
+                style={{
+                  transform: 'scaleX(0.95)',
+                  transition: 'all 0.2s ease-out',
+                  boxShadow: '0 2px 8px rgba(95, 53, 245, 0.3)'
+                }}
+              />
+            )}
+          </React.Fragment>
+        );
+      })}
 
       {/* Auto-save status indicator */}
       {isSaving && (

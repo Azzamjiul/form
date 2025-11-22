@@ -84,12 +84,12 @@ export const SurveyHeaderCard: React.FC<SurveyHeaderCardProps> = ({
         border: "1px solid #D0BFE0",
         borderLeft: "4px solid #5F35F5",
         borderRadius: "8px",
-        padding: "12px",
+        padding: isDragging ? "8px" : "12px", // Reduced padding during drag
         marginBottom: "16px",
-        minHeight: "80px",
+        minHeight: isDragging ? "60px" : "80px", // Reduced height during drag
         display: "flex",
         flexDirection: "column",
-        gap: "8px",
+        gap: isDragging ? "4px" : "8px", // Reduced gap during drag
         position: "relative"
       }}
       onClick={onSelect}
@@ -111,58 +111,78 @@ export const SurveyHeaderCard: React.FC<SurveyHeaderCardProps> = ({
       )}
 
       {/* Survey Title */}
-      <RichTextEditor
-        content={title}
-        onChange={setTitle}
-        placeholder="Form title"
-        showToolbar={true}
-        toolbarPosition="bottom"
-        style={{
-          fontSize: "24px",
-          fontWeight: 400,
-          color: "#202124",
-          lineHeight: 1.4,
-          border: "none",
-          background: "transparent",
-          fontFamily: "inherit",
-        }}
-        className={`
-          transition-all duration-200
-          ${isSelected ? "" : ""}
-        `}
-      />
+      {isDragging ? (
+        // Simplified view during drag - just display title text
+        <div
+          style={{
+            fontSize: "18px",
+            fontWeight: 500,
+            color: "#202124",
+            lineHeight: 1.4,
+            padding: "2px 0"
+          }}
+        >
+          {title || "Untitled Form"}
+        </div>
+      ) : (
+        // Full editor when not dragging
+        <RichTextEditor
+          content={title}
+          onChange={setTitle}
+          placeholder="Form title"
+          showToolbar={true}
+          toolbarPosition="bottom"
+          style={{
+            fontSize: "24px",
+            fontWeight: 400,
+            color: "#202124",
+            lineHeight: 1.4,
+            border: "none",
+            background: "transparent",
+            fontFamily: "inherit",
+          }}
+          className={`
+            transition-all duration-200
+            ${isSelected ? "" : ""}
+          `}
+        />
+      )}
 
-      {/* Divider */}
-      <div
-        style={{
-          height: "1px",
-          background: "#E8E8E8",
-          margin: "0",
-          width: "100%",
-        }}
-      />
+      {/* Divider - Hide during drag */}
+      {!isDragging && (
+        <div
+          style={{
+            height: "1px",
+            background: "#E8E8E8",
+            margin: "0",
+            width: "100%",
+          }}
+        />
+      )}
 
-      {/* Survey Description */}
-      <RichTextEditor
-        content={description}
-        onChange={setDescription}
-        placeholder="Form description"
-        showToolbar={true}
-        toolbarPosition="bottom"
-        style={{
-          fontSize: "16px",
-          fontWeight: 400,
-          color: "#808080",
-          border: "none",
-          background: "transparent",
-          fontFamily: "inherit",
-          padding: "8px 0",
-        }}
-        className={`
-          transition-all duration-200
-          ${isSelected ? "" : ""}
-        `}
-      />
+      {/* Survey Description - Hide during drag */}
+      {!isDragging && description && (
+        <RichTextEditor
+          content={description}
+          onChange={setDescription}
+          placeholder="Form description"
+          showToolbar={true}
+          toolbarPosition="bottom"
+          style={{
+            fontSize: "16px",
+            fontWeight: 400,
+            color: "#808080",
+            border: "none",
+            background: "transparent",
+            fontFamily: "inherit",
+            padding: "8px 0",
+          }}
+          className={`
+            transition-all duration-200
+            ${isSelected ? "" : ""}
+          `}
+        />
+      )}
     </div>
   );
 };

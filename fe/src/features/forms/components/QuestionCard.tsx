@@ -223,18 +223,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   const renderQuestionContent = () => {
     switch (questionType) {
       case 'text':
-        return (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
-            <div className="text-gray-500 text-sm">Short answer text</div>
-          </div>
-        );
+        return null; // Remove unnecessary preview for cleaner UX
 
       case 'paragraph':
-        return (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-6">
-            <div className="text-gray-500 text-sm">Long answer text</div>
-          </div>
-        );
+        return null; // Remove unnecessary preview for cleaner UX
 
       case 'multiple_choice':
         const mcAnswerKey = item.answerKey as any;
@@ -338,11 +330,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         );
 
       case 'dropdown':
-        return (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
-            <div className="text-gray-500 text-sm">Dropdown</div>
-          </div>
-        );
+        return null; // Remove unnecessary preview for cleaner UX
 
       case 'linear_scale':
         return (
@@ -391,18 +379,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         );
 
       case 'date':
-        return (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
-            <div className="text-gray-500 text-sm">Date</div>
-          </div>
-        );
+        return null; // Remove unnecessary preview for cleaner UX
 
       case 'time':
-        return (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
-            <div className="text-gray-500 text-sm">Time</div>
-          </div>
-        );
+        return null; // Remove unnecessary preview for cleaner UX
 
       case 'file_upload':
         return (
@@ -439,12 +419,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         borderLeft: '4px solid #5F35F5',
         borderRadius: '8px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-        padding: '12px',
+        padding: isDragging ? '8px' : '12px', // Reduced padding during drag
         marginBottom: '16px',
-        minHeight: '100px',
+        minHeight: isDragging ? '60px' : '100px', // Reduced height during drag
         display: 'flex',
         flexDirection: 'column',
-        gap: '8px',
+        gap: isDragging ? '4px' : '8px', // Reduced gap during drag
         position: 'relative'
       }}
       onClick={onSelect}
@@ -459,78 +439,113 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       <div className="flex items-start gap-4">
         {/* Question Title */}
         <div className="flex-1">
-          <RichTextEditor
-            content={title}
-            onChange={handleTitleChange}
-            placeholder="Question"
-            showToolbar={true}
-            toolbarPosition="bottom"
-            style={{
-              fontSize: '14px',
-              fontWeight: 400,
-              color: '#202124',
-              lineHeight: 1.5,
-              border: 'none',
-              background: 'transparent',
-              fontFamily: 'inherit',
-            }}
-            className="transition-all duration-200"
-          />
+          {isDragging ? (
+            // Simplified view during drag - just display title text
+            <div
+              style={{
+                fontSize: '14px',
+                fontWeight: 500,
+                color: '#202124',
+                lineHeight: 1.4,
+                padding: '2px 0'
+              }}
+            >
+              {title || 'Untitled Question'}
+            </div>
+          ) : (
+            // Full editor when not dragging
+            <RichTextEditor
+              content={title}
+              onChange={handleTitleChange}
+              placeholder="Question"
+              showToolbar={true}
+              toolbarPosition="bottom"
+              style={{
+                fontSize: '14px',
+                fontWeight: 400,
+                color: '#202124',
+                lineHeight: 1.5,
+                border: 'none',
+                background: 'transparent',
+                fontFamily: 'inherit',
+              }}
+              className="transition-all duration-200"
+            />
+          )}
         </div>
 
         {/* Question Type Selector */}
-        <div className="relative" onClick={(e) => e.stopPropagation()}>
-          <button
-            className="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors min-w-[180px] justify-between"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowTypeDropdown(!showTypeDropdown);
+        {!isDragging && (
+          <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors min-w-[180px] justify-between"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowTypeDropdown(!showTypeDropdown);
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 flex items-center justify-center text-lg">
+                  {QUESTION_TYPES.find(t => t.value === questionType)?.icon || '◉'}
+                </span>
+                <span>{currentTypeLabel}</span>
+              </div>
+              <svg
+                className="w-4 h-4 text-gray-500 transition-transform"
+                style={{ transform: showTypeDropdown ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+
+            {/* Dropdown Menu */}
+            {showTypeDropdown && (
+              <div
+                className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 min-w-[220px] max-h-[400px] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {QUESTION_TYPES.map((type) => (
+                  <button
+                    key={type.value}
+                    className={`
+                      w-full px-4 py-2 flex items-center gap-3 text-sm text-gray-700 border-none bg-transparent cursor-pointer hover:bg-gray-100 transition-colors
+                      ${questionType === type.value ? 'bg-purple-50 text-purple-700 font-medium' : ''}
+                    `}
+                    onClick={() => handleTypeChange(type.value)}
+                  >
+                    <span className="w-5 h-5 flex items-center justify-center text-base">
+                      {type.icon}
+                    </span>
+                    {type.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Type icon during drag */}
+        {isDragging && (
+          <div
+            className="flex items-center gap-2 px-2 py-1"
+            style={{
+              fontSize: '12px',
+              color: '#5F35F5',
+              fontWeight: 500
             }}
           >
-            <div className="flex items-center gap-2">
-              <span className="w-5 h-5 flex items-center justify-center text-lg">
-                {QUESTION_TYPES.find(t => t.value === questionType)?.icon || '◉'}
-              </span>
-              <span>{currentTypeLabel}</span>
-            </div>
-            <svg
-              className="w-4 h-4 text-gray-500 transition-transform"
-              style={{ transform: showTypeDropdown ? 'rotate(180deg)' : 'rotate(0deg)' }}
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
-
-          {/* Dropdown Menu */}
-          {showTypeDropdown && (
-            <div
-              className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 min-w-[220px] max-h-[400px] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {QUESTION_TYPES.map((type) => (
-                <button
-                  key={type.value}
-                  className={`
-                    w-full px-4 py-2 flex items-center gap-3 text-sm text-gray-700 border-none bg-transparent cursor-pointer hover:bg-gray-100 transition-colors
-                    ${questionType === type.value ? 'bg-purple-50 text-purple-700 font-medium' : ''}
-                  `}
-                  onClick={() => handleTypeChange(type.value)}
-                >
-                  <span className="w-5 h-5 flex items-center justify-center text-base">
-                    {type.icon}
-                  </span>
-                  {type.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+            <span className="w-4 h-4 flex items-center justify-center">
+              {QUESTION_TYPES.find(t => t.value === questionType)?.icon || '◉'}
+            </span>
+            <span>{currentTypeLabel}</span>
+          </div>
+        )}
       </div>
 
-      {/* Question Description */}
-      {description && (
+      {/* Question Description - Hide during drag */}
+      {!isDragging && description && (
         <RichTextEditor
           content={description}
           onChange={handleDescriptionChange}
@@ -550,23 +565,27 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         />
       )}
 
-      {/* Divider */}
-      <div
-        style={{
-          height: '1px',
-          background: '#dadce0',
-          margin: '8px 0',
-          width: '100%'
-        }}
-      />
+      {/* Divider - Hide during drag */}
+      {!isDragging && (
+        <div
+          style={{
+            height: '1px',
+            background: '#dadce0',
+            margin: '8px 0',
+            width: '100%'
+          }}
+        />
+      )}
 
-      {/* Question Content Preview */}
-      <div>
-        {renderQuestionContent()}
-      </div>
+      {/* Question Content Preview - Hide during drag */}
+      {!isDragging && renderQuestionContent() && (
+        <div>
+          {renderQuestionContent()}
+        </div>
+      )}
 
-      {/* Answer Key Section for Text Questions - Collapsible */}
-      {(questionType === 'text' || questionType === 'paragraph') && (
+      {/* Answer Key Section for Text Questions - Collapsible - Hide during drag */}
+      {!isDragging && (questionType === 'text' || questionType === 'paragraph') && (
         <div className="mt-4">
           <button
             onClick={(e) => {
@@ -663,74 +682,76 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         </div>
       )}
 
-      {/* Bottom Actions Bar */}
-      <div
-        className="flex items-center justify-between pt-4 border-t border-gray-200"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Left Actions */}
-        <div className="flex items-center gap-3">
-          <button
-            className="p-2 flex items-center justify-center bg-transparent border-none cursor-pointer rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              // TODO: Implement duplicate functionality
-            }}
-            title="Duplicate"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-          </button>
-          <button
-            className="p-2 flex items-center justify-center bg-transparent border-none cursor-pointer rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
-            onClick={handleDeleteClick}
-            title="Delete"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
-          <div className="w-px h-6 bg-gray-300"></div>
-          <button
-            className={`
-              flex items-center gap-2 px-3 py-1.5 rounded-full border-none cursor-pointer transition-colors
-              ${item.required ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'}
-            `}
-            onClick={() => onUpdate({ required: !item.required })}
-          >
-            <span className="text-sm font-medium">Required</span>
-          </button>
-        </div>
-
-        {/* Right Actions */}
-        <div className="flex items-center gap-3">
-          {/* Points Input */}
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600">Points:</label>
-            <input
-              type="number"
-              value={points}
-              onChange={(e) => handlePointsChange(Number(e.target.value))}
-              onClick={(e) => e.stopPropagation()}
-              min="0"
-              className="w-16 px-2 py-1 border border-gray-300 rounded text-sm text-center focus:outline-none focus:ring-1 focus:ring-purple-500"
-            />
+      {/* Bottom Actions Bar - Hide during drag */}
+      {!isDragging && (
+        <div
+          className="flex items-center justify-between pt-4 border-t border-gray-200"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Left Actions */}
+          <div className="flex items-center gap-3">
+            <button
+              className="p-2 flex items-center justify-center bg-transparent border-none cursor-pointer rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                // TODO: Implement duplicate functionality
+              }}
+              title="Duplicate"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </button>
+            <button
+              className="p-2 flex items-center justify-center bg-transparent border-none cursor-pointer rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
+              onClick={handleDeleteClick}
+              title="Delete"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+            <div className="w-px h-6 bg-gray-300"></div>
+            <button
+              className={`
+                flex items-center gap-2 px-3 py-1.5 rounded-full border-none cursor-pointer transition-colors
+                ${item.required ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'}
+              `}
+              onClick={() => onUpdate({ required: !item.required })}
+            >
+              <span className="text-sm font-medium">Required</span>
+            </button>
           </div>
-          <div className="w-px h-6 bg-gray-300"></div>
-          <button
-            className="p-2 flex items-center justify-center bg-transparent border-none cursor-pointer rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
-            onClick={() => {
-              // TODO: Implement more options
-            }}
-            title="More options"
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-            </svg>
-          </button>
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-3">
+            {/* Points Input */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600">Points:</label>
+              <input
+                type="number"
+                value={points}
+                onChange={(e) => handlePointsChange(Number(e.target.value))}
+                onClick={(e) => e.stopPropagation()}
+                min="0"
+                className="w-16 px-2 py-1 border border-gray-300 rounded text-sm text-center focus:outline-none focus:ring-1 focus:ring-purple-500"
+              />
+            </div>
+            <div className="w-px h-6 bg-gray-300"></div>
+            <button
+              className="p-2 flex items-center justify-center bg-transparent border-none cursor-pointer rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
+              onClick={() => {
+                // TODO: Implement more options
+              }}
+              title="More options"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+              </svg>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
