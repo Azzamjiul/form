@@ -96,12 +96,12 @@ export const TitleDescriptionCard: React.FC<TitleDescriptionCardProps> = ({
         borderLeft: '4px solid #5F35F5',
         borderRadius: '8px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-        padding: '24px',
+        padding: '16px',
         marginBottom: '24px',
-        minHeight: '120px',
+        minHeight: '100px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '12px',
+        gap: '10px',
         position: 'relative',
         cursor: isDragging ? 'grabbing' : 'text'
       }}
@@ -154,7 +154,7 @@ export const TitleDescriptionCard: React.FC<TitleDescriptionCardProps> = ({
         showToolbar={true}
         toolbarPosition="bottom"
         style={{
-          fontSize: '18px',
+          fontSize: '16px',
           fontWeight: 500,
           color: '#202124',
           lineHeight: 1.5,

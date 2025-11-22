@@ -84,12 +84,12 @@ export const SurveyHeaderCard: React.FC<SurveyHeaderCardProps> = ({
         border: "1px solid #D0BFE0",
         borderLeft: "4px solid #5F35F5",
         borderRadius: "8px",
-        padding: "24px",
+        padding: "16px",
         marginBottom: "24px",
-        minHeight: "120px",
+        minHeight: "100px",
         display: "flex",
         flexDirection: "column",
-        gap: "12px",
+        gap: "10px",
         position: "relative",
         cursor: isDragging ? "grabbing" : "text",
       }}
@@ -119,7 +119,7 @@ export const SurveyHeaderCard: React.FC<SurveyHeaderCardProps> = ({
         showToolbar={true}
         toolbarPosition="bottom"
         style={{
-          fontSize: "32px",
+          fontSize: "24px",
           fontWeight: 400,
           color: "#202124",
           lineHeight: 1.4,

@@ -331,7 +331,7 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
       <div
         className="flex-1 bg-gray-50 overflow-y-auto overflow-x-hidden"
         style={{
-          padding: '40px 32px',
+          padding: '24px 20px',
           minHeight: '100vh',
           position: 'relative'
         }}
@@ -343,7 +343,7 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
             maxWidth: '900px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '24px'
+            gap: '16px'
           }}
         >
           <CenterCanvas
@@ -368,13 +368,13 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
       {/* Responsive styles */}
       <style>{`
         @media (max-width: 1024px) {
-          div[style*="padding: '40px 32px'"] {
-            padding: 32px 24px;
+          div[style*="padding: '24px 20px'"] {
+            padding: 20px 16px;
           }
         }
 
         @media (max-width: 768px) {
-          div[style*="padding: '40px 32px'"] {
+          div[style*="padding: '24px 20px'"] {
             padding: 16px;
           }
 
@@ -382,8 +382,8 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({ formId, initialFor
             maxWidth: 100%;
           }
 
-          div[style*="gap: '24px'"] {
-            gap: 16px;
+          div[style*="gap: '16px'"] {
+            gap: 12px;
           }
         }
       `}</style>

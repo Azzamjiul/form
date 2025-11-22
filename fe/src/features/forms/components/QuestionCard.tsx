@@ -439,12 +439,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         borderLeft: '4px solid #5F35F5',
         borderRadius: '8px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-        padding: '24px',
+        padding: '16px',
         marginBottom: '24px',
-        minHeight: '180px',
+        minHeight: '140px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '16px',
+        gap: '12px',
         position: 'relative',
         cursor: isDragging ? 'grabbing' : 'text'
       }}
@@ -467,7 +467,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             showToolbar={true}
             toolbarPosition="bottom"
             style={{
-              fontSize: '16px',
+              fontSize: '14px',
               fontWeight: 400,
               color: '#202124',
               lineHeight: 1.5,

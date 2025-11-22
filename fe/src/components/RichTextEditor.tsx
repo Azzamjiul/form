@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
 
 interface RichTextEditorProps {
@@ -177,7 +176,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           },
         },
       }),
-      Underline,
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {

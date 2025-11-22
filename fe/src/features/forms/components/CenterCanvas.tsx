@@ -198,7 +198,7 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
         <p className="text-gray-500 text-sm max-w-md mx-auto mb-6 text-center">
           Tambahkan pertanyaan, bagian, dan kustomisasi form Anda untuk memulai.
         </p>
-        <div className="flex gap-3 justify-center">
+        <div className="flex gap-2 justify-center">
           <button
             onClick={() => onAddQuestion()}
             disabled={isCreating}
@@ -219,7 +219,7 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
   }
 
   return (
-    <div className="flex flex-col" style={{ gap: '24px' }}>
+    <div className="flex flex-col" style={{ gap: '16px' }}>
       {sortedItems.map((item) => (
         <React.Fragment key={item.id}>
           {/* Card with Floating Add Button */}
@@ -229,7 +229,7 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
             {/* Floating Add Element Section - positioned to the right of focused card */}
             {selectedItemId === item.id && (
               <div
-                className="absolute left-full ml-4 z-30"
+                className="absolute left-full ml-2 z-30"
                 style={{
                   animation: 'slideInRight 0.2s ease-out',
                   top: item.type === 'header' ? '40px' : '0px' // Account for header's mt-10 (40px)
