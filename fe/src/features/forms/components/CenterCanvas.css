@@ -99,6 +99,62 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
+/* Hover indicators for drag zones */
+.canvas-card-base:hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #5F35F5 0%, #7B5FFF 100%);
+  border-radius: 2px 0 0 2px;
+  z-index: 1;
+}
+
+.canvas-card-base:hover::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #5F35F5 0%, #7B5FFF 100%);
+  border-radius: 2px 2px 0 0;
+  z-index: 1;
+}
+
+/* Cursor classes for drag and drop */
+.canvas-card-base {
+  cursor: grab;
+}
+
+.canvas-card-base:hover {
+  cursor: grab;
+}
+
+.canvas-card-base.dragging {
+  cursor: grabbing;
+}
+
+.canvas-card-base.drag-over {
+  cursor: grab;
+}
+
+/* Override cursor for interactive elements within cards */
+.canvas-card-base input,
+.canvas-card-base textarea,
+.canvas-card-base button,
+.canvas-card-base select,
+.canvas-card-base [contenteditable="true"] {
+  cursor: text !important;
+}
+
+.canvas-card-base button,
+.canvas-card-base .button-like {
+  cursor: pointer !important;
+}
+
 .canvas-card-base.active {
   border-left-color: #5F35F5;
   background: #FFFFFF;

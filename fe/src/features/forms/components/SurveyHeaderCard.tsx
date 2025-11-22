@@ -75,23 +75,22 @@ export const SurveyHeaderCard: React.FC<SurveyHeaderCardProps> = ({
   return (
     <div
       className={`
-        mt-10 relative transition-all duration-200 ease bg-white
-        ${isDragging ? "opacity-70 scale-102 shadow-lg z-50" : ""}
-        ${isDragOver ? "border-2 border-purple-400 bg-purple-50" : ""}
-        ${isSelected ? "shadow-md" : "shadow-sm hover:shadow-md"}
+        mt-10 canvas-card-base relative transition-all duration-200 ease bg-white
+        ${isDragging ? "dragging opacity-70 scale-102 shadow-lg z-50" : ""}
+        ${isDragOver ? "drag-over border-2 border-purple-400 bg-purple-50" : ""}
+        ${isSelected ? "active shadow-md" : "shadow-sm hover:shadow-md"}
       `}
       style={{
         border: "1px solid #D0BFE0",
         borderLeft: "4px solid #5F35F5",
         borderRadius: "8px",
-        padding: "16px",
-        marginBottom: "24px",
-        minHeight: "100px",
+        padding: "12px",
+        marginBottom: "16px",
+        minHeight: "80px",
         display: "flex",
         flexDirection: "column",
-        gap: "10px",
-        position: "relative",
-        cursor: isDragging ? "grabbing" : "text",
+        gap: "8px",
+        position: "relative"
       }}
       onClick={onSelect}
       draggable

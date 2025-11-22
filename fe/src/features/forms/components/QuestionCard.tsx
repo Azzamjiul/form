@@ -428,10 +428,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   return (
     <div
       className={`
-        relative transition-all duration-200 ease
-        ${isDragging ? 'opacity-70 scale-102 shadow-lg z-50' : ''}
-        ${isDragOver ? 'border-2 border-purple-400 bg-purple-50' : ''}
-        ${isSelected ? 'shadow-md border-l-purple-600' : 'shadow-sm hover:shadow-md'}
+        canvas-card-base relative transition-all duration-200 ease
+        ${isDragging ? 'dragging opacity-70 scale-102 shadow-lg z-50' : ''}
+        ${isDragOver ? 'drag-over border-2 border-purple-400 bg-purple-50' : ''}
+        ${isSelected ? 'active shadow-md' : 'shadow-sm hover:shadow-md'}
       `}
       style={{
         background: '#FFFFFF',
@@ -439,14 +439,13 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         borderLeft: '4px solid #5F35F5',
         borderRadius: '8px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-        padding: '16px',
-        marginBottom: '24px',
-        minHeight: '140px',
+        padding: '12px',
+        marginBottom: '16px',
+        minHeight: '100px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '12px',
-        position: 'relative',
-        cursor: isDragging ? 'grabbing' : 'text'
+        gap: '8px',
+        position: 'relative'
       }}
       onClick={onSelect}
       draggable
