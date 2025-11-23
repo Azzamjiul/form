@@ -9,10 +9,11 @@ interface TitleDescriptionCardProps {
   isSelected: boolean;
   isDragging: boolean;
   isDragOver: boolean;
+  isAnyCardDragging: boolean;
   onSelect: () => void;
   onUpdate: (updates: Partial<CanvasItem>) => void;
   onDelete: () => void;
-  onDragStart: () => void;
+  onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDragLeave: () => void;
   onDrop: (e: React.DragEvent) => void;
@@ -25,6 +26,7 @@ export const TitleDescriptionCard: React.FC<TitleDescriptionCardProps> = ({
   isSelected,
   isDragging,
   isDragOver,
+  isAnyCardDragging,
   onSelect,
   onUpdate,
   onDelete,
@@ -85,10 +87,11 @@ export const TitleDescriptionCard: React.FC<TitleDescriptionCardProps> = ({
   return (
     <div
       className={`
-        canvas-card-base relative transition-all duration-200 ease
+        canvas-card canvas-card-base relative transition-all duration-200 ease
         ${isDragging ? 'dragging opacity-70 scale-102 shadow-lg z-50' : ''}
         ${isDragOver ? 'drag-over border-2 border-purple-400 bg-purple-50' : ''}
         ${isSelected ? 'active shadow-md' : 'shadow-sm hover:shadow-md'}
+        ${isAnyCardDragging && !isDragging ? 'minimized' : ''}
       `}
       style={{
         background: '#FFFFFF',
@@ -150,16 +153,7 @@ export const TitleDescriptionCard: React.FC<TitleDescriptionCardProps> = ({
       {/* Section Title */}
       {isDragging ? (
         // Simplified view during drag - just display title text
-        <div
-          style={{
-            fontSize: '14px',
-            fontWeight: 500,
-            color: '#202124',
-            lineHeight: 1.5,
-            borderBottom: '2px solid #5F35F5',
-            padding: '4px 0'
-          }}
-        >
+        <div className="text-sm font-medium text-gray-900 leading-6 py-1 border-b-2 border-purple-600">
           {title || 'Untitled Section'}
         </div>
       ) : (

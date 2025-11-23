@@ -90,6 +90,20 @@
   transition: all 0.2s ease;
 }
 
+.canvas-card.minimized {
+  opacity: 0.6;
+  transform: scale(0.95);
+  filter: blur(0.5px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: grab;
+}
+
+.canvas-card.minimized:hover {
+  opacity: 0.8;
+  transform: scale(0.97);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
 /* Base card transitions */
 .canvas-card-base {
   transition: all 0.2s ease;
@@ -138,7 +152,14 @@
 }
 
 .canvas-card-base.drag-over {
-  cursor: grab;
+  cursor: copy;
+}
+
+
+/* Enhanced visual feedback for drag targets */
+.canvas-card-base.drag-over {
+  background: rgba(95, 53, 245, 0.08);
+  border-color: #5F35F5;
 }
 
 /* Override cursor for interactive elements within cards */

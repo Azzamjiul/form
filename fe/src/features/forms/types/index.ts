@@ -561,6 +561,8 @@ export interface CanvasItem {
   sectionNumber?: number;
   totalSections?: number;
   order: number;
+  sectionId?: string;
+  orderInSection?: number;
   isEditing?: boolean;
   isSelected?: boolean;
   isDragging?: boolean;

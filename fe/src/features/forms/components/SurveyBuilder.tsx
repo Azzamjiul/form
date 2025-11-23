@@ -6,6 +6,8 @@ import type {
   FormWithSections,
   CreateFieldRequest,
   CanvasItem,
+  ReorderFieldItem,
+  ReorderFieldsRequest,
 } from "../types";
 import { CenterCanvas } from "./CenterCanvas";
 import { useAutoSave } from "../../../hooks/useAutoSave";
@@ -42,6 +44,14 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
+  const [isReordering, setIsReordering] = useState(false);
+  const [reorderError, setReorderError] = useState<string | null>(null);
+
+  // Global minimization state - when any card is being dragged, all other cards should be minimized
+  const isAnyCardDragging = draggedItemId !== null;
+
+  // Refs for debounced reordering
+  const reorderTimerRef = React.useRef<number | null>(null);
 
   // Transform form data into canvas items
   const transformFormToItems = useCallback(
@@ -324,6 +334,11 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({
     return () => {
       updateTimersRef.current.forEach((timer) => clearTimeout(timer));
       updateTimersRef.current.clear();
+
+      // Clear reorder timer
+      if (reorderTimerRef.current) {
+        clearTimeout(reorderTimerRef.current);
+      }
     };
   }, []);
 
@@ -341,6 +356,47 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({
     [selectedItemId],
   );
 
+  // Transform CanvasItem to ReorderFieldItem format for backend
+  const mapItemsToReorderRequest = useCallback((canvasItems: CanvasItem[]): ReorderFieldsRequest => {
+    const reorderItems: ReorderFieldItem[] = [];
+
+    canvasItems.forEach((item, index) => {
+      // Only include actual field items (not header, page-break, etc.)
+      if (item.type === 'question' && item.id !== 'survey-header' && !item.id.startsWith('page-break-')) {
+        reorderItems.push({
+          field_id: item.id,
+          order_global: index,
+          section_id: item.sectionId,
+          order_in_section: item.orderInSection,
+        });
+      }
+    });
+
+    return { items: reorderItems };
+  }, []);
+
+  // Debounced backend sync for reordering
+  const syncReorderToBackend = useCallback(async (canvasItems: CanvasItem[]) => {
+    try {
+      setIsReordering(true);
+      setReorderError(null);
+
+      const reorderRequest = mapItemsToReorderRequest(canvasItems);
+      await fieldsApi.reorderFields(formId, reorderRequest);
+
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['form', formId] });
+    } catch (error) {
+      console.error('Failed to reorder items:', error);
+      setReorderError('Failed to save order changes');
+
+      // Optionally revert to original order by refetching
+      queryClient.invalidateQueries({ queryKey: ['form', formId] });
+    } finally {
+      setIsReordering(false);
+    }
+  }, [formId, mapItemsToReorderRequest, queryClient]);
+
   // Handle item reordering
   const handleReorderItems = useCallback(
     (draggedId: string, targetId: string) => {
@@ -357,13 +413,25 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({
         newItems.splice(targetIndex, 0, draggedItem);
 
         // Update order values
-        return newItems.map((item, index) => ({
+        const reorderedItems = newItems.map((item, index) => ({
           ...item,
           order: index,
         }));
+
+        // Clear existing reorder timer
+        if (reorderTimerRef.current) {
+          clearTimeout(reorderTimerRef.current);
+        }
+
+        // Debounced backend sync (1.5 seconds delay)
+        reorderTimerRef.current = setTimeout(() => {
+          syncReorderToBackend(reorderedItems);
+        }, 1500);
+
+        return reorderedItems;
       });
     },
-    [],
+    [syncReorderToBackend],
   );
 
   return (
@@ -392,6 +460,7 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({
             formId={formId}
             selectedItemId={selectedItemId}
             draggedItemId={draggedItemId}
+            isAnyCardDragging={isAnyCardDragging}
             onSelectItem={handleSelectItem}
             onUpdateItem={handleUpdateItem}
             onDeleteItem={handleDeleteItem}
@@ -404,6 +473,32 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({
             justSaved={justSaved}
           />
         </div>
+
+        {/* Reordering Status Indicator */}
+        {isReordering && (
+          <div className="fixed bottom-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-50">
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+            <span className="text-sm font-medium">Saving order...</span>
+          </div>
+        )}
+
+        {/* Reordering Error Indicator */}
+        {reorderError && (
+          <div className="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-50 max-w-sm">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <span className="text-sm font-medium">{reorderError}</span>
+            <button
+              onClick={() => setReorderError(null)}
+              className="ml-auto text-white/80 hover:text-white"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Responsive styles */}

@@ -9,9 +9,10 @@ interface SurveyHeaderCardProps {
   isSelected: boolean;
   isDragging: boolean;
   isDragOver: boolean;
+  isAnyCardDragging: boolean;
   onSelect: () => void;
   onUpdate: (updates: Partial<CanvasItem>) => void;
-  onDragStart: () => void;
+  onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDragLeave: () => void;
   onDrop: (e: React.DragEvent) => void;
@@ -24,6 +25,7 @@ export const SurveyHeaderCard: React.FC<SurveyHeaderCardProps> = ({
   isSelected,
   isDragging,
   isDragOver,
+  isAnyCardDragging,
   onSelect,
   onUpdate,
   onDragStart,
@@ -75,10 +77,11 @@ export const SurveyHeaderCard: React.FC<SurveyHeaderCardProps> = ({
   return (
     <div
       className={`
-        mt-10 canvas-card-base relative transition-all duration-200 ease bg-white
+        mt-10 canvas-card canvas-card-base relative transition-all duration-200 ease bg-white
         ${isDragging ? "dragging opacity-70 scale-102 shadow-lg z-50" : ""}
         ${isDragOver ? "drag-over border-2 border-purple-400 bg-purple-50" : ""}
         ${isSelected ? "active shadow-md" : "shadow-sm hover:shadow-md"}
+        ${isAnyCardDragging && !isDragging ? "minimized" : ""}
       `}
       style={{
         border: "1px solid #D0BFE0",
@@ -113,15 +116,7 @@ export const SurveyHeaderCard: React.FC<SurveyHeaderCardProps> = ({
       {/* Survey Title */}
       {isDragging ? (
         // Simplified view during drag - just display title text
-        <div
-          style={{
-            fontSize: "18px",
-            fontWeight: 500,
-            color: "#202124",
-            lineHeight: 1.4,
-            padding: "2px 0"
-          }}
-        >
+        <div className="text-lg font-medium text-gray-900 leading-5 py-0.5">
           {title || "Untitled Form"}
         </div>
       ) : (

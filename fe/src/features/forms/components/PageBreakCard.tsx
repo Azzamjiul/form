@@ -11,7 +11,7 @@ interface PageBreakCardProps {
   onSelect: () => void;
   onUpdate: (updates: Partial<CanvasItem>) => void;
   onDelete: () => void;
-  onDragStart: () => void;
+  onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDragLeave: () => void;
   onDrop: (e: React.DragEvent) => void;

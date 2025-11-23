@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { SurveyHeaderCard } from './SurveyHeaderCard';
 import { TitleDescriptionCard } from './TitleDescriptionCard';
 import { QuestionCard } from './QuestionCard';
@@ -12,6 +12,7 @@ interface CenterCanvasProps {
   formId: string;
   selectedItemId: string | null;
   draggedItemId: string | null;
+  isAnyCardDragging: boolean;
   onSelectItem: (itemId: string) => void;
   onUpdateItem: (itemId: string, updates: Partial<CanvasItem>) => void;
   onDeleteItem: (itemId: string) => void;
@@ -29,6 +30,7 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
   formId,
   selectedItemId,
   draggedItemId,
+  isAnyCardDragging,
   onSelectItem,
   onUpdateItem,
   onDeleteItem,
@@ -42,43 +44,38 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
 }) => {
   const [dragOverItemId, setDragOverItemId] = useState<string | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<'above' | 'below' | null>(null);
-  const dragTimeoutRef = useRef<number | null>(null);
 
   // Handle drag start
-  const handleDragStart = useCallback((itemId: string) => {
+  const handleDragStart = useCallback((e: React.DragEvent, itemId: string) => {
+    // Set drag data for proper drag functionality
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', itemId);
+    e.dataTransfer.setData('application/json', JSON.stringify({
+      type: 'canvas-item',
+      itemId: itemId
+    }));
+
     onSetDraggedItem(itemId);
     setDragOverItemId(null);
   }, [onSetDraggedItem]);
 
-  // Handle drag over with debouncing for better performance
+  // Handle drag over - immediate response for better UX
   const handleDragOver = useCallback((e: React.DragEvent, itemId: string) => {
     e.preventDefault();
     if (draggedItemId && draggedItemId !== itemId) {
-      // Clear existing timeout
-      if (dragTimeoutRef.current) {
-        clearTimeout(dragTimeoutRef.current);
-      }
+      // Immediate update for responsive drag feedback
+      setDragOverItemId(itemId);
 
-      // Debounce drag over updates to reduce re-renders
-      dragTimeoutRef.current = setTimeout(() => {
-        setDragOverItemId(itemId);
-
-        // Determine if we should insert above or below based on mouse position
-        const rect = e.currentTarget.getBoundingClientRect();
-        const midPoint = rect.top + rect.height / 2;
-        const position = e.clientY < midPoint ? 'above' : 'below';
-        setDragOverPosition(position);
-      }, 50); // 50ms debounce
+      // Determine if we should insert above or below based on mouse position
+      const rect = e.currentTarget.getBoundingClientRect();
+      const midPoint = rect.top + rect.height / 2;
+      const position = e.clientY < midPoint ? 'above' : 'below';
+      setDragOverPosition(position);
     }
   }, [draggedItemId]);
 
   // Handle drag leave
   const handleDragLeave = useCallback(() => {
-    // Clear any pending timeout
-    if (dragTimeoutRef.current) {
-      clearTimeout(dragTimeoutRef.current);
-      dragTimeoutRef.current = null;
-    }
     setDragOverItemId(null);
     setDragOverPosition(null);
   }, []);
@@ -96,11 +93,6 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
 
   // Handle drag end
   const handleDragEnd = useCallback(() => {
-    // Clear any pending timeout
-    if (dragTimeoutRef.current) {
-      clearTimeout(dragTimeoutRef.current);
-      dragTimeoutRef.current = null;
-    }
     setDragOverItemId(null);
     setDragOverPosition(null);
     onSetDraggedItem(null);
@@ -122,9 +114,10 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
             isSelected={isSelected}
             isDragging={isDragging}
             isDragOver={isDragOver}
+            isAnyCardDragging={isAnyCardDragging}
             onSelect={() => onSelectItem(item.id)}
             onUpdate={(updates) => onUpdateItem(item.id, updates)}
-            onDragStart={() => handleDragStart(item.id)}
+            onDragStart={(e) => handleDragStart(e, item.id)}
             onDragOver={(e) => handleDragOver(e, item.id)}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, item.id)}
@@ -141,10 +134,11 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
             isSelected={isSelected}
             isDragging={isDragging}
             isDragOver={isDragOver}
+            isAnyCardDragging={isAnyCardDragging}
             onSelect={() => onSelectItem(item.id)}
             onUpdate={(updates) => onUpdateItem(item.id, updates)}
             onDelete={() => onDeleteItem(item.id)}
-            onDragStart={() => handleDragStart(item.id)}
+            onDragStart={(e) => handleDragStart(e, item.id)}
             onDragOver={(e) => handleDragOver(e, item.id)}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, item.id)}
@@ -161,10 +155,11 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
             isSelected={isSelected}
             isDragging={isDragging}
             isDragOver={isDragOver}
+            isAnyCardDragging={isAnyCardDragging}
             onSelect={() => onSelectItem(item.id)}
             onUpdate={(updates) => onUpdateItem(item.id, updates)}
             onDelete={() => onDeleteItem(item.id)}
-            onDragStart={() => handleDragStart(item.id)}
+            onDragStart={(e) => handleDragStart(e, item.id)}
             onDragOver={(e) => handleDragOver(e, item.id)}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, item.id)}
@@ -184,7 +179,7 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
             onSelect={() => onSelectItem(item.id)}
             onUpdate={(updates) => onUpdateItem(item.id, updates)}
             onDelete={() => onDeleteItem(item.id)}
-            onDragStart={() => handleDragStart(item.id)}
+            onDragStart={(e) => handleDragStart(e, item.id)}
             onDragOver={(e) => handleDragOver(e, item.id)}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, item.id)}

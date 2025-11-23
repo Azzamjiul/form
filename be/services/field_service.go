@@ -298,6 +298,15 @@ func (s *FieldService) ReorderFields(formID uuid.UUID, req *models.ReorderFields
 		return nil, errors.New("You don't have permission to reorder fields in this form")
 	}
 
+	// Validate input for duplicate order_global values
+	orderMap := make(map[int]bool)
+	for _, item := range req.Items {
+		if orderMap[item.OrderGlobal] {
+			return nil, errors.New("Duplicate order_global values in request")
+		}
+		orderMap[item.OrderGlobal] = true
+	}
+
 	// Validate all field IDs belong to this form
 	fieldIDs := make([]uuid.UUID, 0, len(req.Items))
 	for _, item := range req.Items {
@@ -318,8 +327,30 @@ func (s *FieldService) ReorderFields(formID uuid.UUID, req *models.ReorderFields
 		return nil, errors.New("One or more field IDs do not belong to this form")
 	}
 
-	// Perform update in transaction
+	// Perform safe update in transaction to avoid duplicate constraint violations
 	err := s.db.Transaction(func(tx *gorm.DB) error {
+		// Step 1: Get max order_global for this form to create safe temporary positions
+		var maxOrder int
+		if err := tx.Model(&models.FormField{}).Where("form_id = ?", formID).Select("COALESCE(MAX(order_global), 0)").Scan(&maxOrder).Error; err != nil {
+			return err
+		}
+		safeTempPosition := maxOrder + 1000
+
+		// Step 2: Move all affected fields to temporary safe positions first
+		for _, item := range req.Items {
+			fieldID, _ := uuid.Parse(item.FieldID)
+			updates := map[string]interface{}{
+				"order_global": safeTempPosition,
+				"updated_at":   time.Now(),
+			}
+
+			if err := tx.Model(&models.FormField{}).Where("id = ?", fieldID).Updates(updates).Error; err != nil {
+				return err
+			}
+			safeTempPosition++
+		}
+
+		// Step 3: Now apply the final order positions without conflicts
 		for _, item := range req.Items {
 			fieldID, _ := uuid.Parse(item.FieldID)
 			updates := map[string]interface{}{
