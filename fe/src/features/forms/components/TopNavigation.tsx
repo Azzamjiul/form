@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router';
 import type { FormWithSections } from '../types';
 import { Button } from '../../../components/ui';
 import { ShareModal } from './ShareModal';
@@ -11,6 +12,7 @@ interface TopNavigationProps {
 }
 
 export const TopNavigation: React.FC<TopNavigationProps> = ({ form, onFormUpdate }) => {
+  const navigate = useNavigate();
   const [title, setTitle] = useState(form.title || '');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -73,7 +75,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({ form, onFormUpdate
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => window.history.back()}
+                onClick={() => navigate("/forms")}
                 className="mr-4"
               >
                 <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,7 +168,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({ form, onFormUpdate
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.history.back()}
+              onClick={() => navigate("/forms")}
               className="p-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
