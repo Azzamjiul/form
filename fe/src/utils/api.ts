@@ -21,6 +21,11 @@ export const api = ky.create({
         if (accessToken) {
           request.headers.set('Authorization', `Bearer ${accessToken}`);
         }
+
+        // Remove Content-Type header for FormData requests to let browser set it correctly
+        if (request.body instanceof FormData) {
+          request.headers.delete('Content-Type');
+        }
       },
     ],
     afterResponse: [

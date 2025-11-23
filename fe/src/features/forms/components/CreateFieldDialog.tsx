@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { fieldsApi } from '../api/fields';
 import type { CreateFieldRequest } from '../types';
 import { Dialog, Button, Input, Textarea, Toggle } from '../../../components/ui';
+import { ImageUpload } from './ImageUpload';
 
 interface CreateFieldDialogProps {
   formId: string;
@@ -158,6 +159,24 @@ export const CreateFieldDialog: React.FC<CreateFieldDialogProps> = ({
           rows={3}
           placeholder="Optional description or help text"
         />
+
+        {/* Image Upload */}
+        {formData.content_type === 'input_field' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Question Image (Optional)
+            </label>
+            <ImageUpload
+              value={formData.image_file_id}
+              onChange={(imageFileId) =>
+                setFormData({ ...formData, image_file_id: imageFileId || undefined })
+              }
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Add an image to display alongside the question text
+            </p>
+          </div>
+        )}
 
         {/* Order Global */}
         <Input

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { type CanvasItem, type AnswerKey } from '../types';
-import { RichTextEditor } from '../../../components/RichTextEditor';
-import { fieldsApi } from '../api/fields';
+import React, { useState, useEffect } from "react";
+import { type CanvasItem, type AnswerKey } from "../types";
+import { RichTextEditor } from "../../../components/RichTextEditor";
+import { fieldsApi } from "../api/fields";
+import { CompactImageUpload } from "./CompactImageUpload";
 
 interface QuestionCardProps {
   item: CanvasItem;
@@ -21,8 +22,8 @@ interface QuestionCardProps {
 }
 
 const QUESTION_TYPES = [
-  { value: 'text', label: 'Short answer', icon: 'T' },
-  { value: 'multiple_choice', label: 'Multiple choice', icon: '◉' }
+  { value: "text", label: "Short answer", icon: "T" },
+  { value: "multiple_choice", label: "Multiple choice", icon: "◉" },
 ];
 
 export const QuestionCard: React.FC<QuestionCardProps> = ({
@@ -39,7 +40,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   onDragOver,
   onDragLeave,
   onDrop,
-  onDragEnd
+  onDragEnd,
 }) => {
   const [title, setTitle] = useState(item.title);
   const [description, setDescription] = useState(item.description);
@@ -53,9 +54,9 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   const [points, setPoints] = useState(item.points || 0);
 
   // Answer key state
-  const [newAcceptableAnswer, setNewAcceptableAnswer] = useState('');
+  const [newAcceptableAnswer, setNewAcceptableAnswer] = useState("");
 
-  const questionType = item.questionType || 'text';
+  const questionType = item.questionType || "text";
 
   // Update local state when item changes
   useEffect(() => {
@@ -80,17 +81,20 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     setShowTypeDropdown(false);
 
     // Initialize options and answer key for multiple choice questions
-    if (newType === 'multiple_choice' && (!item.options || item.options.length === 0)) {
+    if (
+      newType === "multiple_choice" &&
+      (!item.options || item.options.length === 0)
+    ) {
       onUpdate({
         questionType: newType,
         options: [
-          { id: '1', label: 'Option 1' },
-          { id: '2', label: 'Option 2' }
+          { id: "1", label: "Option 1" },
+          { id: "2", label: "Option 2" },
         ],
         answerKey: {
-          type: 'multiple_choice',
-          correct_options: []
-        }
+          type: "multiple_choice",
+          correct_options: [],
+        },
       });
     } else {
       onUpdate({ questionType: newType });
@@ -99,8 +103,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
   // Handle option change
   const handleOptionChange = (optionId: string, newLabel: string) => {
-    const updatedOptions = item.options?.map(opt =>
-      opt.id === optionId ? { ...opt, label: newLabel } : opt
+    const updatedOptions = item.options?.map((opt) =>
+      opt.id === optionId ? { ...opt, label: newLabel } : opt,
     );
     onUpdate({ options: updatedOptions });
   };
@@ -109,7 +113,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   const handleAddOption = () => {
     const newOption = {
       id: Date.now().toString(),
-      label: `Option ${(item.options?.length || 0) + 1}`
+      label: `Option ${(item.options?.length || 0) + 1}`,
     };
     onUpdate({ options: [...(item.options || []), newOption] });
   };
@@ -117,9 +121,22 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   // Delete option
   const handleDeleteOption = (optionId: string) => {
     if (item.options && item.options.length > 2) {
-      const updatedOptions = item.options.filter(opt => opt.id !== optionId);
+      const updatedOptions = item.options.filter((opt) => opt.id !== optionId);
       onUpdate({ options: updatedOptions });
     }
+  };
+
+  // Handle option image change
+  const handleOptionImageChange = (
+    optionId: string,
+    imageFileId: string | null,
+  ) => {
+    const updatedOptions = item.options?.map((opt) =>
+      opt.id === optionId
+        ? { ...opt, imageFileId: imageFileId || undefined }
+        : opt,
+    );
+    onUpdate({ options: updatedOptions });
   };
 
   // Answer Key Handlers
@@ -128,7 +145,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     const correctOptions = currentAnswerKey?.correct_options || [];
 
     let newCorrectOptions: string[];
-    if (questionType === 'multiple_choice') {
+    if (questionType === "multiple_choice") {
       // Single selection - replace
       newCorrectOptions = correctOptions.includes(optionId) ? [] : [optionId];
     } else {
@@ -140,7 +157,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
     const newAnswerKey: AnswerKey = {
       type: questionType as any,
-      correct_options: newCorrectOptions
+      correct_options: newCorrectOptions,
     };
 
     onUpdate({ answerKey: newAnswerKey });
@@ -153,14 +170,14 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     const acceptableAnswers = currentAnswerKey?.acceptable_answers || [];
 
     const newAnswerKey: AnswerKey = {
-      type: 'text',
+      type: "text",
       case_sensitive: currentAnswerKey?.case_sensitive || false,
       acceptable_answers: [...acceptableAnswers, newAcceptableAnswer.trim()],
-      trim_whitespace: currentAnswerKey?.trim_whitespace !== false
+      trim_whitespace: currentAnswerKey?.trim_whitespace !== false,
     };
 
     onUpdate({ answerKey: newAnswerKey });
-    setNewAcceptableAnswer('');
+    setNewAcceptableAnswer("");
   };
 
   const handleRemoveAcceptableAnswer = (index: number) => {
@@ -168,10 +185,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     const acceptableAnswers = currentAnswerKey?.acceptable_answers || [];
 
     const newAnswerKey: AnswerKey = {
-      type: 'text',
+      type: "text",
       case_sensitive: currentAnswerKey?.case_sensitive || false,
-      acceptable_answers: acceptableAnswers.filter((_: string, i: number) => i !== index),
-      trim_whitespace: currentAnswerKey?.trim_whitespace !== false
+      acceptable_answers: acceptableAnswers.filter(
+        (_: string, i: number) => i !== index,
+      ),
+      trim_whitespace: currentAnswerKey?.trim_whitespace !== false,
     };
 
     onUpdate({ answerKey: newAnswerKey });
@@ -181,10 +200,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     const currentAnswerKey = item.answerKey as any;
 
     const newAnswerKey: AnswerKey = {
-      type: 'text',
+      type: "text",
       case_sensitive: !(currentAnswerKey?.case_sensitive || false),
       acceptable_answers: currentAnswerKey?.acceptable_answers || [],
-      trim_whitespace: currentAnswerKey?.trim_whitespace !== false
+      trim_whitespace: currentAnswerKey?.trim_whitespace !== false,
     };
 
     onUpdate({ answerKey: newAnswerKey });
@@ -208,8 +227,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       onDelete(); // Call parent's onDelete to update local state
       setShowDeleteModal(false);
     } catch (error) {
-      console.error('Failed to delete field:', error);
-      alert('Failed to delete item. Please try again.');
+      console.error("Failed to delete field:", error);
+      alert("Failed to delete item. Please try again.");
     } finally {
       setIsDeleting(false);
     }
@@ -220,17 +239,16 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     setShowDeleteModal(false);
   };
 
-
   // Render question content preview
   const renderQuestionContent = () => {
     switch (questionType) {
-      case 'text':
+      case "text":
+      // return null; // Remove unnecessary preview for cleaner UX
+
+      case "paragraph":
         return null; // Remove unnecessary preview for cleaner UX
 
-      case 'paragraph':
-        return null; // Remove unnecessary preview for cleaner UX
-
-      case 'multiple_choice':
+      case "multiple_choice":
         const mcAnswerKey = item.answerKey as any;
         const mcCorrectOptions = mcAnswerKey?.correct_options || [];
         return (
@@ -238,35 +256,60 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             {item.options?.map((option) => {
               const isCorrect = mcCorrectOptions.includes(option.id);
               return (
-                <div key={option.id} className="flex items-center gap-3 group py-1">
-                  <div
-                    className={`w-5 h-5 border-2 rounded-full flex-shrink-0 cursor-pointer flex items-center justify-center transition-colors ${
-                      isCorrect ? 'border-green-600 bg-green-50' : 'border-gray-400'
-                    }`}
-                    onClick={() => handleToggleCorrectOption(option.id)}
-                    title={isCorrect ? 'Correct answer' : 'Mark as correct'}
-                  >
-                    {isCorrect && (
-                      <div className="w-3 h-3 bg-green-600 rounded-full"></div>
-                    )}
+                <div key={option.id} className="space-y-2">
+                  <div className="flex items-center gap-3 group py-1">
+                    <div
+                      className={`w-5 h-5 border-2 rounded-full flex-shrink-0 cursor-pointer flex items-center justify-center transition-colors ${
+                        isCorrect
+                          ? "border-green-600 bg-green-50"
+                          : "border-gray-400"
+                      }`}
+                      onClick={() => handleToggleCorrectOption(option.id)}
+                      title={isCorrect ? "Correct answer" : "Mark as correct"}
+                    >
+                      {isCorrect && (
+                        <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      value={option.label}
+                      onChange={(e) =>
+                        handleOptionChange(option.id, e.target.value)
+                      }
+                      className="flex-1 text-sm text-gray-700 border-none outline-none bg-transparent px-1 py-1.5 focus:bg-gray-50 rounded"
+                      placeholder="Option"
+                    />
+                    <button
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 flex items-center justify-center text-gray-400 hover:text-gray-600"
+                      onClick={() => handleDeleteOption(option.id)}
+                      disabled={item.options?.length === 2}
+                      title="Delete option"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
                   </div>
-                  <input
-                    type="text"
-                    value={option.label}
-                    onChange={(e) => handleOptionChange(option.id, e.target.value)}
-                    className="flex-1 text-sm text-gray-700 border-none outline-none bg-transparent px-1 py-1.5 focus:bg-gray-50 rounded"
-                    placeholder="Option"
-                  />
-                  <button
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 flex items-center justify-center text-gray-400 hover:text-gray-600"
-                    onClick={() => handleDeleteOption(option.id)}
-                    disabled={item.options?.length === 2}
-                    title="Delete option"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+                  {/* Option Image Upload */}
+                  <div className="ml-8">
+                    <CompactImageUpload
+                      value={option.imageFileId}
+                      onChange={(imageFileId) =>
+                        handleOptionImageChange(option.id, imageFileId)
+                      }
+                    />
+                  </div>
                 </div>
               );
             })}
@@ -280,7 +323,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           </div>
         );
 
-      case 'checkbox':
+      case "checkbox":
         const cbAnswerKey = item.answerKey as any;
         const cbCorrectOptions = cbAnswerKey?.correct_options || [];
         return (
@@ -288,36 +331,69 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             {item.options?.map((option) => {
               const isCorrect = cbCorrectOptions.includes(option.id);
               return (
-                <div key={option.id} className="flex items-center gap-3 group p-2 rounded hover:bg-gray-50">
-                  <div
-                    className={`w-6 h-6 border-2 rounded flex-shrink-0 cursor-pointer flex items-center justify-center transition-colors ${
-                      isCorrect ? 'border-green-500 bg-green-50' : 'border-gray-300'
-                    }`}
-                    onClick={() => handleToggleCorrectOption(option.id)}
-                    title={isCorrect ? 'Correct answer' : 'Mark as correct'}
-                  >
-                    {isCorrect && (
-                      <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                <div key={option.id} className="space-y-2">
+                  <div className="flex items-center gap-3 group p-2 rounded hover:bg-gray-50">
+                    <div
+                      className={`w-6 h-6 border-2 rounded flex-shrink-0 cursor-pointer flex items-center justify-center transition-colors ${
+                        isCorrect
+                          ? "border-green-500 bg-green-50"
+                          : "border-gray-300"
+                      }`}
+                      onClick={() => handleToggleCorrectOption(option.id)}
+                      title={isCorrect ? "Correct answer" : "Mark as correct"}
+                    >
+                      {isCorrect && (
+                        <svg
+                          className="w-4 h-4 text-green-600"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      value={option.label}
+                      onChange={(e) =>
+                        handleOptionChange(option.id, e.target.value)
+                      }
+                      className="flex-1 text-sm text-gray-700 border-b border-transparent hover:border-gray-300 focus:border-purple-600 outline-none bg-transparent"
+                      placeholder="Option"
+                    />
+                    <button
+                      className="opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500"
+                      onClick={() => handleDeleteOption(option.id)}
+                      disabled={item.options?.length === 2}
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
-                    )}
+                    </button>
                   </div>
-                  <input
-                    type="text"
-                    value={option.label}
-                    onChange={(e) => handleOptionChange(option.id, e.target.value)}
-                    className="flex-1 text-sm text-gray-700 border-b border-transparent hover:border-gray-300 focus:border-purple-600 outline-none bg-transparent"
-                    placeholder="Option"
-                  />
-                  <button
-                    className="opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500"
-                    onClick={() => handleDeleteOption(option.id)}
-                    disabled={item.options?.length === 2}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+                  {/* Option Image Upload */}
+                  <div className="ml-9">
+                    <CompactImageUpload
+                      value={option.imageFileId}
+                      onChange={(imageFileId) =>
+                        handleOptionImageChange(option.id, imageFileId)
+                      }
+                    />
+                  </div>
                 </div>
               );
             })}
@@ -331,10 +407,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           </div>
         );
 
-      case 'dropdown':
+      case "dropdown":
         return null; // Remove unnecessary preview for cleaner UX
 
-      case 'linear_scale':
+      case "linear_scale":
         return (
           <div className="space-y-3">
             <div className="flex items-center gap-4">
@@ -369,30 +445,47 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           </div>
         );
 
-      case 'rating':
+      case "rating":
         return (
           <div className="flex gap-1">
             {[1, 2, 3, 4, 5].map((star) => (
-              <svg key={star} className="w-6 h-6 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+              <svg
+                key={star}
+                className="w-6 h-6 text-gray-300"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
             ))}
           </div>
         );
 
-      case 'date':
+      case "date":
         return null; // Remove unnecessary preview for cleaner UX
 
-      case 'time':
+      case "time":
         return null; // Remove unnecessary preview for cleaner UX
 
-      case 'file_upload':
+      case "file_upload":
         return (
           <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-            <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            <svg
+              className="w-8 h-8 text-gray-400 mx-auto mb-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              />
             </svg>
-            <div className="text-gray-500 text-sm">Click to upload or drag and drop</div>
+            <div className="text-gray-500 text-sm">
+              Click to upload or drag and drop
+            </div>
           </div>
         );
 
@@ -405,30 +498,32 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     }
   };
 
-  const currentTypeLabel = QUESTION_TYPES.find(t => t.value === questionType)?.label || 'Short answer';
+  const currentTypeLabel =
+    QUESTION_TYPES.find((t) => t.value === questionType)?.label ||
+    "Short answer";
 
   return (
     <div
       className={`
         canvas-card canvas-card-base relative transition-all duration-200 ease
-        ${isDragging ? 'dragging opacity-70 scale-102 shadow-lg z-50' : ''}
-        ${isDragOver ? 'drag-over border-2 border-purple-400 bg-purple-50' : ''}
-        ${isSelected ? 'active shadow-md' : 'shadow-sm hover:shadow-md'}
-        ${isAnyCardDragging && !isDragging ? 'minimized' : ''}
+        ${isDragging ? "dragging opacity-70 scale-102 shadow-lg z-50" : ""}
+        ${isDragOver ? "drag-over border-2 border-purple-400 bg-purple-50" : ""}
+        ${isSelected ? "active shadow-md" : "shadow-sm hover:shadow-md"}
+        ${isAnyCardDragging && !isDragging ? "minimized" : ""}
       `}
       style={{
-        background: '#FFFFFF',
-        border: '1px solid #E8E8E8',
-        borderLeft: '4px solid #5F35F5',
-        borderRadius: '8px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-        padding: isDragging ? '8px' : '12px', // Reduced padding during drag
-        marginBottom: '16px',
-        minHeight: isDragging ? '60px' : '100px', // Reduced height during drag
-        display: 'flex',
-        flexDirection: 'column',
-        gap: isDragging ? '4px' : '8px', // Reduced gap during drag
-        position: 'relative'
+        background: "#FFFFFF",
+        border: "1px solid #E8E8E8",
+        borderLeft: "4px solid #5F35F5",
+        borderRadius: "8px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+        padding: isDragging ? "8px" : "12px", // Reduced padding during drag
+        marginBottom: "16px",
+        minHeight: isDragging ? "60px" : "100px", // Reduced height during drag
+        display: "flex",
+        flexDirection: "column",
+        gap: isDragging ? "4px" : "8px", // Reduced gap during drag
+        position: "relative",
       }}
       onClick={onSelect}
       draggable
@@ -445,7 +540,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           {isDragging ? (
             // Simplified view during drag - just display title text
             <div className="text-sm font-medium text-gray-900 leading-5 py-0.5">
-              {title || 'Untitled Question'}
+              {title || "Untitled Question"}
             </div>
           ) : (
             // Full editor when not dragging
@@ -456,13 +551,13 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               showToolbar={true}
               toolbarPosition="bottom"
               style={{
-                fontSize: '14px',
+                fontSize: "14px",
                 fontWeight: 400,
-                color: '#202124',
+                color: "#202124",
                 lineHeight: 1.5,
-                border: 'none',
-                background: 'transparent',
-                fontFamily: 'inherit',
+                border: "none",
+                background: "transparent",
+                fontFamily: "inherit",
               }}
               className="transition-all duration-200"
             />
@@ -481,17 +576,26 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             >
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 flex items-center justify-center text-lg">
-                  {QUESTION_TYPES.find(t => t.value === questionType)?.icon || '◉'}
+                  {QUESTION_TYPES.find((t) => t.value === questionType)?.icon ||
+                    "◉"}
                 </span>
                 <span>{currentTypeLabel}</span>
               </div>
               <svg
                 className="w-4 h-4 text-gray-500 transition-transform"
-                style={{ transform: showTypeDropdown ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                style={{
+                  transform: showTypeDropdown
+                    ? "rotate(180deg)"
+                    : "rotate(0deg)",
+                }}
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
               </svg>
             </button>
 
@@ -506,7 +610,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                     key={type.value}
                     className={`
                       w-full px-4 py-2 flex items-center gap-3 text-sm text-gray-700 border-none bg-transparent cursor-pointer hover:bg-gray-100 transition-colors
-                      ${questionType === type.value ? 'bg-purple-50 text-purple-700 font-medium' : ''}
+                      ${questionType === type.value ? "bg-purple-50 text-purple-700 font-medium" : ""}
                     `}
                     onClick={() => handleTypeChange(type.value)}
                   >
@@ -526,13 +630,14 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           <div
             className="flex items-center gap-2 px-2 py-1"
             style={{
-              fontSize: '12px',
-              color: '#5F35F5',
-              fontWeight: 500
+              fontSize: "12px",
+              color: "#5F35F5",
+              fontWeight: 500,
             }}
           >
             <span className="w-4 h-4 flex items-center justify-center">
-              {QUESTION_TYPES.find(t => t.value === questionType)?.icon || '◉'}
+              {QUESTION_TYPES.find((t) => t.value === questionType)?.icon ||
+                "◉"}
             </span>
             <span>{currentTypeLabel}</span>
           </div>
@@ -548,134 +653,171 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           showToolbar={true}
           toolbarPosition="bottom"
           style={{
-            fontSize: '13px',
+            fontSize: "13px",
             fontWeight: 400,
-            color: '#70757a',
-            border: 'none',
-            background: 'transparent',
-            fontFamily: 'inherit',
-            padding: '0',
+            color: "#70757a",
+            border: "none",
+            background: "transparent",
+            fontFamily: "inherit",
+            padding: "0",
           }}
           className="transition-all duration-200"
         />
+      )}
+
+      {/* Question Image Upload - Hide during drag */}
+      {!isDragging && (
+        <div className="my-4">
+          <CompactImageUpload
+            value={item.imageFileId}
+            onChange={(imageFileId) =>
+              onUpdate({ imageFileId: imageFileId || undefined })
+            }
+          />
+        </div>
       )}
 
       {/* Divider - Hide during drag */}
       {!isDragging && (
         <div
           style={{
-            height: '1px',
-            background: '#dadce0',
-            margin: '8px 0',
-            width: '100%'
+            height: "1px",
+            background: "#dadce0",
+            margin: "8px 0",
+            width: "100%",
           }}
         />
       )}
 
       {/* Question Content Preview - Hide during drag */}
       {!isDragging && renderQuestionContent() && (
-        <div>
-          {renderQuestionContent()}
-        </div>
+        <div>{renderQuestionContent()}</div>
       )}
 
       {/* Answer Key Section for Text Questions - Collapsible - Hide during drag */}
-      {!isDragging && (questionType === 'text' || questionType === 'paragraph') && (
-        <div className="mt-4">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowAnswerKey(!showAnswerKey);
-            }}
-            className="flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 font-medium mb-2"
-          >
-            <svg
-              className="w-4 h-4 transition-transform"
-              style={{ transform: showAnswerKey ? 'rotate(90deg)' : 'rotate(0deg)' }}
-              fill="currentColor"
-              viewBox="0 0 20 20"
+      {!isDragging &&
+        (questionType === "text" || questionType === "paragraph") && (
+          <div className="mt-4">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowAnswerKey(!showAnswerKey);
+              }}
+              className="flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 font-medium mb-2"
             >
-              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-            </svg>
-            <span>Answer Key</span>
-          </button>
-
-          {showAnswerKey && (
-            <div className="space-y-3 pl-6 pb-2">
-              {/* Case Sensitive Toggle */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id={`case-sensitive-${item.id}`}
-                  checked={(item.answerKey as any)?.case_sensitive || false}
-                  onChange={handleToggleCaseSensitive}
-                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+              <svg
+                className="w-4 h-4 transition-transform"
+                style={{
+                  transform: showAnswerKey ? "rotate(90deg)" : "rotate(0deg)",
+                }}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clipRule="evenodd"
                 />
-                <label htmlFor={`case-sensitive-${item.id}`} className="text-sm text-gray-700">
-                  Case sensitive
-                </label>
-              </div>
+              </svg>
+              <span>Answer Key</span>
+            </button>
 
-              {/* Acceptable Answers List */}
-              <div>
-                <label className="text-xs font-medium text-gray-600 mb-2 block">
-                  Acceptable Answers
-                </label>
-                <div className="space-y-1.5">
-                  {((item.answerKey as any)?.acceptable_answers || []).map((answer: string, index: number) => (
-                    <div key={index} className="flex items-center gap-2 bg-green-50 border border-green-200 rounded px-2 py-1.5">
-                      <span className="flex-1 text-sm text-gray-700">{answer}</span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveAcceptableAnswer(index);
-                        }}
-                        className="p-0.5 flex items-center justify-center text-gray-400 hover:text-red-500"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
+            {showAnswerKey && (
+              <div className="space-y-3 pl-6 pb-2">
+                {/* Case Sensitive Toggle */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id={`case-sensitive-${item.id}`}
+                    checked={(item.answerKey as any)?.case_sensitive || false}
+                    onChange={handleToggleCaseSensitive}
+                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  />
+                  <label
+                    htmlFor={`case-sensitive-${item.id}`}
+                    className="text-sm text-gray-700"
+                  >
+                    Case sensitive
+                  </label>
                 </div>
-              </div>
 
-              {/* Add New Answer */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newAcceptableAnswer}
-                  onChange={(e) => setNewAcceptableAnswer(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
+                {/* Acceptable Answers List */}
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-2 block">
+                    Acceptable Answers
+                  </label>
+                  <div className="space-y-1.5">
+                    {((item.answerKey as any)?.acceptable_answers || []).map(
+                      (answer: string, index: number) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 bg-green-50 border border-green-200 rounded px-2 py-1.5"
+                        >
+                          <span className="flex-1 text-sm text-gray-700">
+                            {answer}
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveAcceptableAnswer(index);
+                            }}
+                            className="p-0.5 flex items-center justify-center text-gray-400 hover:text-red-500"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                </div>
+
+                {/* Add New Answer */}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newAcceptableAnswer}
+                    onChange={(e) => setNewAcceptableAnswer(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        e.stopPropagation();
+                        handleAddAcceptableAnswer();
+                      }
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    placeholder="Add acceptable answer..."
+                    className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  />
+                  <button
+                    onClick={(e) => {
                       e.stopPropagation();
                       handleAddAcceptableAnswer();
-                    }
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                  placeholder="Add acceptable answer..."
-                  className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
-                />
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddAcceptableAnswer();
-                  }}
-                  disabled={!newAcceptableAnswer.trim()}
-                  className="px-3 py-1.5 bg-purple-600 text-white rounded text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Add
-                </button>
-              </div>
+                    }}
+                    disabled={!newAcceptableAnswer.trim()}
+                    className="px-3 py-1.5 bg-purple-600 text-white rounded text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Add
+                  </button>
+                </div>
 
-              <p className="text-xs text-gray-500 italic">
-                Students can provide any of these answers to get full credit.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
+                <p className="text-xs text-gray-500 italic">
+                  Students can provide any of these answers to get full credit.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
       {/* Bottom Actions Bar - Hide during drag */}
       {!isDragging && (
@@ -693,8 +835,18 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               }}
               title="Duplicate"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
               </svg>
             </button>
             <button
@@ -702,15 +854,25 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               onClick={handleDeleteClick}
               title="Delete"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
               </svg>
             </button>
             <div className="w-px h-6 bg-gray-300"></div>
             <button
               className={`
                 flex items-center gap-2 px-3 py-1.5 rounded-full border-none cursor-pointer transition-colors
-                ${item.required ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'}
+                ${item.required ? "bg-purple-600 text-white" : "bg-gray-200 text-gray-700"}
               `}
               onClick={() => onUpdate({ required: !item.required })}
             >
@@ -762,7 +924,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               Delete Question?
             </h3>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to delete this question? This action cannot be undone.
+              Are you sure you want to delete this question? This action cannot
+              be undone.
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -777,7 +940,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                 disabled={isDeleting}
                 className="px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isDeleting ? 'Deleting...' : 'Delete'}
+                {isDeleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

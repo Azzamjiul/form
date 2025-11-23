@@ -418,6 +418,7 @@ func (s *FormService) buildFormWithSectionsResponse(form *models.Form) *models.F
 				Points:         field.Points,
 				Options:        options,
 				AnswerKey:      answerKey,
+				ImageFileID:	field.ImageFileID,
 			})
 		}
 
@@ -464,6 +465,7 @@ func (s *FormService) buildFormWithSectionsResponse(form *models.Form) *models.F
 			Points:         field.Points,
 			Options:        options,
 			AnswerKey:      answerKey,
+			ImageFileID: 	field.ImageFileID,
 		})
 	}
 

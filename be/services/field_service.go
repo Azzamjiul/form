@@ -12,12 +12,14 @@ import (
 )
 
 type FieldService struct {
-	db *gorm.DB
+	db           *gorm.DB
+	fileService  *FileService
 }
 
-func NewFieldService(db *gorm.DB) *FieldService {
+func NewFieldService(db *gorm.DB, fileService *FileService) *FieldService {
 	return &FieldService{
-		db: db,
+		db:          db,
+		fileService: fileService,
 	}
 }
 
@@ -77,6 +79,7 @@ func (s *FieldService) CreateField(formID uuid.UUID, req *models.CreateFieldRequ
 		OrderInSection: req.OrderInSection,
 		IsRequired:     isRequired,
 		Points:         points,
+		ImageFileID:    req.ImageFileID,
 		Options:        s.getOptions(req.Options),
 		AnswerKey:      s.getAnswerKey(req.AnswerKey),
 		CreatedAt:      time.Now(),
@@ -187,6 +190,9 @@ func (s *FieldService) UpdateField(formID uuid.UUID, fieldID uuid.UUID, req *mod
 	}
 	if req.AnswerKey != nil {
 		updates["answer_key"] = *req.AnswerKey
+	}
+	if req.ImageFileID != nil {
+		updates["image_file_id"] = *req.ImageFileID
 	}
 	if req.OrderGlobal != nil {
 		// Check for duplicate order_global
@@ -507,6 +513,12 @@ func (s *FieldService) buildFieldResponse(field *models.FormField) models.FieldR
 		answerKey = &field.AnswerKey
 	}
 
+	var imageURL *string
+	if field.ImageFileID != nil && *field.ImageFileID != "" && s.fileService != nil {
+		url := s.fileService.GenerateServeURL(*field.ImageFileID)
+		imageURL = &url
+	}
+
 	return models.FieldResponse{
 		FieldID:        field.ID.String(),
 		ContentType:    field.ContentType,
@@ -518,6 +530,8 @@ func (s *FieldService) buildFieldResponse(field *models.FormField) models.FieldR
 		SectionID:      sectionID,
 		IsRequired:     field.IsRequired,
 		Points:         field.Points,
+		ImageFileID:    field.ImageFileID,
+		ImageURL:       imageURL,
 		Options:        options,
 		AnswerKey:      answerKey,
 	}
@@ -540,6 +554,12 @@ func (s *FieldService) buildFieldDetailResponse(field *models.FormField) *models
 		answerKey = &field.AnswerKey
 	}
 
+	var imageURL *string
+	if field.ImageFileID != nil && *field.ImageFileID != "" && s.fileService != nil {
+		url := s.fileService.GenerateServeURL(*field.ImageFileID)
+		imageURL = &url
+	}
+
 	return &models.FieldDetailResponse{
 		FieldID:        field.ID.String(),
 		FormID:         field.FormID.String(),
@@ -552,6 +572,8 @@ func (s *FieldService) buildFieldDetailResponse(field *models.FormField) *models
 		SectionID:      sectionID,
 		IsRequired:     field.IsRequired,
 		Points:         field.Points,
+		ImageFileID:    field.ImageFileID,
+		ImageURL:       imageURL,
 		Options:        options,
 		AnswerKey:      answerKey,
 		CreatedAt:      field.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),

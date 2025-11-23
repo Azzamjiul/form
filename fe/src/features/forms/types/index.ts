@@ -86,6 +86,32 @@ export interface FormSection {
   fields: FormField[];
 }
 
+export interface MultipleChoiceOption {
+  id: string;
+  text: string;
+  image_file_id?: string;
+  image_url?: string;
+  order: number;
+}
+
+export interface MultipleChoiceOptions {
+  allow_multiple: boolean;
+  options: MultipleChoiceOption[];
+}
+
+// Helper function to check if options is MultipleChoiceOptions
+export const isMultipleChoiceOptions = (options: any): options is MultipleChoiceOptions => {
+  return options && typeof options === 'object' && 'options' in options && Array.isArray(options.options);
+};
+
+// Helper function to get options array from either format
+export const getOptionsArray = (options: any): Array<{ id: string; label: string }> => {
+  if (isMultipleChoiceOptions(options)) {
+    return options.options.map(opt => ({ id: opt.id, label: opt.text }));
+  }
+  return options || [];
+};
+
 export interface FormField {
   field_id: string;
   content_type: string;
@@ -97,7 +123,9 @@ export interface FormField {
   section_id?: string;
   is_required: boolean;
   points: number;
-  options?: Array<{ id: string; label: string }>;
+  image_file_id?: string;
+  image_url?: string;
+  options?: MultipleChoiceOptions | Array<{ id: string; label: string }>;
   answer_key?: AnswerKey;
 }
 
@@ -221,6 +249,7 @@ export interface CreateFieldRequest {
   section_id?: string;
   is_required?: boolean;
   points?: number;
+  image_file_id?: string;
   answer_key?: any;
 }
 
@@ -229,6 +258,7 @@ export interface UpdateFieldRequest {
   description?: string;
   is_required?: boolean;
   points?: number;
+  image_file_id?: string;
   answer_key?: any;
   order_global?: number;
   order_in_section?: number;
@@ -555,9 +585,10 @@ export interface CanvasItem {
   description: string;
   questionType?: string;
   required?: boolean;
-  options?: Array<{ id: string; label: string }>;
+  options?: Array<{ id: string; label: string; imageFileId?: string }>;
   answerKey?: AnswerKey;
   points?: number;
+  imageFileId?: string;
   sectionNumber?: number;
   totalSections?: number;
   order: number;

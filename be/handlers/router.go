@@ -21,10 +21,11 @@ type Router struct {
 	responseHandler     *FormResponseHandler
 	analyticsHandler    *AnalyticsHandler
 	exportHandler       *ExportHandler
+	fileHandler         *FileHandler
 	jwtUtil             *utils.JWTUtil
 }
 
-func NewRouter(authHandler *AuthHandler, formHandler *FormHandler, sectionHandler *SectionHandler, fieldHandler *FieldHandler, whitelistHandler *WhitelistHandler, quizHandler *QuizHandler, responseHandler *FormResponseHandler, analyticsHandler *AnalyticsHandler, exportHandler *ExportHandler, jwtUtil *utils.JWTUtil) *Router {
+func NewRouter(authHandler *AuthHandler, formHandler *FormHandler, sectionHandler *SectionHandler, fieldHandler *FieldHandler, whitelistHandler *WhitelistHandler, quizHandler *QuizHandler, responseHandler *FormResponseHandler, analyticsHandler *AnalyticsHandler, exportHandler *ExportHandler, fileHandler *FileHandler, jwtUtil *utils.JWTUtil) *Router {
 	return &Router{
 		authHandler:      authHandler,
 		formHandler:      formHandler,
@@ -35,6 +36,7 @@ func NewRouter(authHandler *AuthHandler, formHandler *FormHandler, sectionHandle
 		responseHandler: responseHandler,
 		analyticsHandler: analyticsHandler,
 		exportHandler:    exportHandler,
+		fileHandler:      fileHandler,
 		jwtUtil:          jwtUtil,
 	}
 }
@@ -107,6 +109,17 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 			forms.GET("/:form_id/export", r.exportHandler.ExportFormResponses)
 		}
 
+		// File upload routes (protected)
+		files := api.Group("/upload")
+		files.Use(middleware.AuthMiddleware(r.jwtUtil))
+		{
+			files.POST("", r.fileHandler.UploadImage)
+		}
+
+		// Image serving routes (public for display, but authenticated for delete)
+		api.GET("/images/:id", r.fileHandler.GetImage)
+		api.DELETE("/images/:id", middleware.AuthMiddleware(r.jwtUtil), r.fileHandler.DeleteImage)
+
 		// Whitelist validation route (public - no auth required)
 		api.GET("/whitelist/validate/:access_token", r.whitelistHandler.ValidateAccessToken)
 
@@ -154,6 +167,9 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 
 func NewGinEngine() *gin.Engine {
 	engine := gin.Default()
+
+	// Set maximum request size for file uploads (10MB + some overhead)
+	engine.MaxMultipartMemory = 12 << 20 // 12MB
 
 	// CORS middleware
 	engine.Use(func(c *gin.Context) {

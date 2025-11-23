@@ -9,6 +9,7 @@ import type {
   ReorderFieldItem,
   ReorderFieldsRequest,
 } from "../types";
+import { getOptionsArray } from "../types";
 import { CenterCanvas } from "./CenterCanvas";
 import { useAutoSave } from "../../../hooks/useAutoSave";
 
@@ -86,9 +87,10 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({
               description: field.description || "",
               questionType: field.field_type || "text",
               required: field.is_required || false,
-              options: field.options || [],
+              options: getOptionsArray(field.options),
               answerKey: field.answer_key,
               points: field.points || 0,
+              imageFileId: field.image_file_id,
               order: canvasOrder++,
               isEditing: false,
               isSelected: false,
@@ -120,9 +122,10 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({
                   description: field.description || "",
                   questionType: field.field_type || "text",
                   required: field.is_required || false,
-                  options: field.options || [],
+                  options: getOptionsArray(field.options),
                   answerKey: field.answer_key,
                   points: field.points || 0,
+                  imageFileId: field.image_file_id,
                   order: canvasOrder++,
                   isEditing: false,
                   isSelected: false,
@@ -275,6 +278,8 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({
         if (updates.answerKey !== undefined)
           updatePayload.answer_key = updates.answerKey;
         if (updates.points !== undefined) updatePayload.points = updates.points;
+        if (updates.imageFileId !== undefined)
+          updatePayload.image_file_id = updates.imageFileId;
 
         await fieldsApi.updateField(formId, fieldId, updatePayload);
         setIsSaving(false);

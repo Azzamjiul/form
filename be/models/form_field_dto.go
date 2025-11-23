@@ -14,6 +14,7 @@ type CreateFieldRequest struct {
 	SectionID      *string         `json:"section_id"`
 	IsRequired     *bool           `json:"is_required"`
 	Points         *int            `json:"points"`
+	ImageFileID    *string         `json:"image_file_id"`
 	Options        *datatypes.JSON `json:"options" swaggertype:"object"`
 	AnswerKey      *datatypes.JSON `json:"answer_key" swaggertype:"object"`
 }
@@ -24,6 +25,7 @@ type UpdateFieldRequest struct {
 	Description    *string         `json:"description"`
 	IsRequired     *bool           `json:"is_required"`
 	Points         *int            `json:"points"`
+	ImageFileID    *string         `json:"image_file_id"`
 	Options        *datatypes.JSON `json:"options" swaggertype:"object"`
 	AnswerKey      *datatypes.JSON `json:"answer_key" swaggertype:"object"`
 	OrderGlobal    *int            `json:"order_global"`
@@ -56,6 +58,8 @@ type FieldDetailResponse struct {
 	SectionID      *string         `json:"section_id,omitempty"`
 	IsRequired     bool            `json:"is_required"`
 	Points         int             `json:"points"`
+	ImageFileID    *string         `json:"image_file_id,omitempty"`
+	ImageURL       *string         `json:"image_url,omitempty"`
 	Options        *datatypes.JSON `json:"options,omitempty"`
 	AnswerKey      *datatypes.JSON `json:"answer_key,omitempty"`
 	CreatedAt      string          `json:"created_at"`
@@ -69,4 +73,19 @@ type FieldListResponse struct {
 type ReorderFieldsResponse struct {
 	Items   []ReorderFieldItem `json:"items"`
 	Message string             `json:"message"`
+}
+
+// Option structs for multiple choice fields with image support
+
+type MultipleChoiceOption struct {
+	ID          string  `json:"id"`
+	Text        string  `json:"text"`
+	ImageFileID *string `json:"image_file_id,omitempty"`
+	ImageURL    *string `json:"image_url,omitempty"`
+	Order       int     `json:"order"`
+}
+
+type MultipleChoiceOptions struct {
+	AllowMultiple bool                    `json:"allow_multiple"`
+	Options       []MultipleChoiceOption  `json:"options"`
 }
