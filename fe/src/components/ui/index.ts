@@ -31,3 +31,5 @@ export { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '.
 export { Checkbox } from './Checkbox';
 
 export { Label } from './Label';
+
+export { Skeleton, FormCardSkeleton, FormRowSkeleton, FormListSkeleton } from './Skeleton';

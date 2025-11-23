@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 import { formsApi } from '../../features/forms';
 import type { CreateFormRequest, FormListParams } from '../../features/forms';
 import { FormList, CreateFormDialog } from '../../features/forms/components';
+import { FormListSkeleton } from '../../components/ui/Skeleton';
 import { DashboardLayout } from '../../components/layout';
 import { ProtectedRoute } from '../../features/auth';
 
@@ -113,28 +114,27 @@ function FormsContent() {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">My Forms</h1>
-            <p className="text-gray-600 mt-1">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
+          <div className="flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Forms</h1>
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">
               Create and manage your surveys and quizzes
             </p>
           </div>
           <button
             onClick={() => setIsCreateDialogOpen(true)}
-            className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
           >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
             Create Form
           </button>
         </div>
 
-        {isLoading && (
-          <div className="text-center py-12">
-            <div className="text-gray-500">Loading forms...</div>
-          </div>
-        )}
+        {isLoading && <FormListSkeleton />}
 
         {error && (
           <div className="text-center py-12">

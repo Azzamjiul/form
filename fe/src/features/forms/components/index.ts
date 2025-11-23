@@ -1,4 +1,5 @@
 export { FormCard } from './FormCard';
+export { FormRow } from './FormRow';
 export { FormList } from './FormList';
 export { CreateFormDialog } from './CreateFormDialog';
 export { FieldList } from './FieldList';
