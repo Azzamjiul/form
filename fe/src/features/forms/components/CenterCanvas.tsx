@@ -112,16 +112,9 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
             item={item}
             formId={formId}
             isSelected={isSelected}
-            isDragging={isDragging}
-            isDragOver={isDragOver}
             isAnyCardDragging={isAnyCardDragging}
             onSelect={() => onSelectItem(item.id)}
             onUpdate={(updates) => onUpdateItem(item.id, updates)}
-            onDragStart={(e) => handleDragStart(e, item.id)}
-            onDragOver={(e) => handleDragOver(e, item.id)}
-            onDragLeave={handleDragLeave}
-            onDrop={(e) => handleDrop(e, item.id)}
-            onDragEnd={handleDragEnd}
           />
         );
 
