@@ -75,7 +75,7 @@ export const OptionManager: React.FC<OptionManagerProps> = ({ item, onUpdate }) 
           onLabelChange={(newLabel) => handleOptionChange(option.id, newLabel)}
           onDelete={() => handleDeleteOption(option.id)}
           onImageChange={(imageFileId) => handleOptionImageChange(option.id, imageFileId)}
-          canDelete={item.options && item.options.length > 1}
+          canDelete={(item.options?.length || 0) > 1}
         />
       ))}
 
@@ -104,7 +104,7 @@ const OptionRow: React.FC<OptionRowProps> = ({
   questionType,
   onLabelChange,
   onDelete,
-  onImageChange,
+  onImageChange: _onImageChange,
   canDelete,
 }) => {
   const [showImageUpload, setShowImageUpload] = useState(false);

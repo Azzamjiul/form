@@ -1,4 +1,4 @@
-import {
+import type {
   AnswerKey,
   CanvasItem,
   FormWithSections,
@@ -110,7 +110,7 @@ export interface BaseCardProps {
   onDragEnd?: () => void;
 }
 
-export interface QuestionCardProps extends BaseCardProps {
+export interface QuestionCardProps extends Omit<BaseCardProps, 'children'> {
   item: CanvasItem;
   formId: string;
   onUpdate: (updates: Partial<CanvasItem>) => void;
@@ -137,4 +137,13 @@ export interface UseAutoSaveResult<T> {
   error: Error | null;
   save: (data: T) => Promise<void>;
   clearError: () => void;
+  debouncedSave: (data: T) => void;
+}
+
+export interface UseFieldAutoSaveResult {
+  debouncedFieldUpdate: (updates: any) => void;
+  isSaving: boolean;
+  error: Error | null;
+  clearError: () => void;
+  cleanup: () => void;
 }

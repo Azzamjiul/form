@@ -4,7 +4,6 @@ import {
   useSensors,
   PointerSensor,
   KeyboardSensor,
-  closestCenter,
 } from '@dnd-kit/core';
 import type {
   DragEndEvent,
@@ -13,11 +12,8 @@ import type {
 } from '@dnd-kit/core';
 import {
   arrayMove,
-  SortableContext,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import type { CanvasItem } from '../../types';
 import type { UseDragDropOptions, DragDropState, DragDropHandlers } from '../types/canvas';
 
 export function useDragDrop({ items, onReorder, debounceMs = 1500 }: UseDragDropOptions) {
@@ -29,6 +25,19 @@ export function useDragDrop({ items, onReorder, debounceMs = 1500 }: UseDragDrop
   });
 
   const reorderTimerRef = useRef<number | null>(null);
+
+  // Use refs to maintain stable references for frequently changing values
+  const itemsRef = useRef(items);
+  const onReorderRef = useRef(onReorder);
+
+  // Update refs when values change
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
+
+  useEffect(() => {
+    onReorderRef.current = onReorder;
+  }, [onReorder]);
 
   // Sensors for drag and drop
   const sensors = useSensors(
@@ -68,8 +77,9 @@ export function useDragDrop({ items, onReorder, debounceMs = 1500 }: UseDragDrop
     }
 
     // Determine drag position based on relative positions
-    const activeIndex = items.findIndex(item => item.id === active.id);
-    const overIndex = items.findIndex(item => item.id === over.id);
+    const currentItems = itemsRef.current;
+    const activeIndex = currentItems.findIndex(item => item.id === active.id);
+    const overIndex = currentItems.findIndex(item => item.id === over.id);
 
     if (activeIndex === -1 || overIndex === -1) return;
 
@@ -81,7 +91,7 @@ export function useDragDrop({ items, onReorder, debounceMs = 1500 }: UseDragDrop
       dragOverId: over.id as string,
       dragPosition,
     }));
-  }, [items]);
+  }, []); // Remove items dependency, use ref instead
 
   // Handle drag end
   const handleDragEnd = useCallback((event: DragEndEvent) => {
@@ -98,16 +108,13 @@ export function useDragDrop({ items, onReorder, debounceMs = 1500 }: UseDragDrop
       return;
     }
 
-    const oldIndex = items.findIndex(item => item.id === active.id);
-    const newIndex = items.findIndex(item => item.id === over.id);
+    const currentItems = itemsRef.current;
+    const oldIndex = currentItems.findIndex(item => item.id === active.id);
+    const newIndex = currentItems.findIndex(item => item.id === over.id);
 
     if (oldIndex === -1 || newIndex === -1) return;
 
-    const newItems = arrayMove(items, oldIndex, newIndex);
-    const reorderedItems = newItems.map((item, index) => ({
-      ...item,
-      order: index,
-    }));
+    arrayMove(currentItems, oldIndex, newIndex);
 
     // Clear existing timer
     if (reorderTimerRef.current) {
@@ -116,10 +123,10 @@ export function useDragDrop({ items, onReorder, debounceMs = 1500 }: UseDragDrop
 
     // Debounced reorder
     reorderTimerRef.current = setTimeout(() => {
-      onReorder(active.id as string, over.id as string);
+      onReorderRef.current(active.id as string, over.id as string);
       reorderTimerRef.current = null;
     }, debounceMs);
-  }, [items, onReorder, debounceMs]);
+  }, [debounceMs]); // Remove items and onReorder dependencies, use refs instead
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -224,7 +231,7 @@ export function useDragDrop({ items, onReorder, debounceMs = 1500 }: UseDragDrop
 
         // Debounced reorder
         reorderTimerRef.current = setTimeout(() => {
-          onReorder(draggedId, id);
+          onReorderRef.current(draggedId, id);
           reorderTimerRef.current = null;
         }, debounceMs);
       }
@@ -235,7 +242,7 @@ export function useDragDrop({ items, onReorder, debounceMs = 1500 }: UseDragDrop
         dragPosition: null,
         isDragging: false,
       });
-    }, [onReorder, debounceMs]),
+    }, [debounceMs]), // Remove onReorder dependency, use ref instead
 
     onDragEnd: useCallback(() => {
       setDragState({

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer } from 'react';
+import { createContext, useContext, useReducer, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import type { CanvasState, CanvasAction, CanvasContextType, CanvasItem } from '../types/canvas';
 
@@ -147,7 +147,7 @@ interface CanvasProviderProps {
 export function CanvasProvider({ children }: CanvasProviderProps) {
   const [state, dispatch] = useReducer(canvasReducer, initialState);
 
-  const actions = {
+  const actions = useMemo(() => ({
     selectItem: (id: string) => dispatch({ type: 'SELECT_ITEM', payload: id }),
     updateItem: (id: string, updates: Partial<CanvasItem>) =>
       dispatch({ type: 'UPDATE_ITEM', payload: { id, updates } }),
@@ -162,13 +162,13 @@ export function CanvasProvider({ children }: CanvasProviderProps) {
     addError: (error: string) => dispatch({ type: 'ADD_ERROR', payload: error }),
     clearErrors: () => dispatch({ type: 'CLEAR_ERRORS' }),
     loadItems: (items: CanvasItem[]) => dispatch({ type: 'LOAD_ITEMS', payload: items }),
-  };
+  }), []); // Empty dependency array since actions reference dispatch which is stable
 
-  const value: CanvasContextType = {
+  const value: CanvasContextType = useMemo(() => ({
     state,
     dispatch,
     actions,
-  };
+  }), [state, dispatch, actions]);
 
   return (
     <CanvasContext.Provider value={value}>

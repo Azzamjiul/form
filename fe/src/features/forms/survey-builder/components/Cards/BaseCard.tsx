@@ -1,5 +1,4 @@
 import React from 'react';
-import type { ReactNode } from 'react';
 import type { BaseCardProps } from '../../types/canvas';
 
 export const BaseCard: React.FC<BaseCardProps> = ({
@@ -78,7 +77,7 @@ export const BaseCard: React.FC<BaseCardProps> = ({
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (e.key === 'Enter') {
           e.preventDefault();
           onSelect();
         }

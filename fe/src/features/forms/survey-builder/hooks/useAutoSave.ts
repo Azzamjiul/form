@@ -1,5 +1,5 @@
-import { useState, useCallback, useRef } from 'react';
-import type { AutoSaveOptions, UseAutoSaveResult } from '../types/canvas';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import type { AutoSaveOptions, UseAutoSaveResult, UseFieldAutoSaveResult } from '../types/canvas';
 
 export function useAutoSave<T>(
   data: T,
@@ -36,6 +36,7 @@ export function useAutoSave<T>(
     }
   }, [saveFunction, onSave, onError]);
 
+  // Debounced save function for external use
   const debouncedSave = useCallback(
     (saveData: T) => {
       // Clear any existing timer
@@ -64,7 +65,7 @@ export function useAutoSave<T>(
   }, []);
 
   // Auto-save when data changes
-  const triggerAutoSave = useCallback(() => {
+  useEffect(() => {
     debouncedSave(data);
   }, [data, debouncedSave]);
 
@@ -73,7 +74,7 @@ export function useAutoSave<T>(
     error,
     save,
     clearError,
-    triggerAutoSave,
+    debouncedSave,
   };
 }
 
@@ -82,16 +83,25 @@ export function useFieldAutoSave(
   fieldId: string,
   saveField: (fieldId: string, updates: any) => Promise<void>,
   options: AutoSaveOptions = {}
-) {
+): UseFieldAutoSaveResult {
   const updateTimersRef = useRef<Map<string, number>>(new Map());
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   const saveFieldUpdates = useCallback(
     async (updates: any) => {
+      setIsSaving(true);
+      setError(null);
       try {
         await saveField(fieldId, updates);
+        setError(null);
       } catch (err) {
+        const error = err instanceof Error ? err : new Error(`Failed to save field ${fieldId}`);
+        setError(error);
         console.error(`Failed to save field ${fieldId}:`, err);
         throw err;
+      } finally {
+        setIsSaving(false);
       }
     },
     [fieldId, saveField]
@@ -116,6 +126,10 @@ export function useFieldAutoSave(
     [fieldId, saveFieldUpdates, options.delay]
   );
 
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
   // Cleanup timer on unmount
   const cleanup = useCallback(() => {
     const timer = updateTimersRef.current.get(fieldId);
@@ -127,6 +141,9 @@ export function useFieldAutoSave(
 
   return {
     debouncedFieldUpdate,
+    isSaving,
+    error,
+    clearError,
     cleanup,
   };
 }

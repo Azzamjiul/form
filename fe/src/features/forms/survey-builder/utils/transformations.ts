@@ -11,6 +11,11 @@ export class CanvasTransformer {
    * Transform FormWithSections to CanvasItem array
    */
   static fromFormToCanvas(formData: FormWithSections): CanvasItem[] {
+    // Handle null/undefined formData
+    if (!formData) {
+      return [];
+    }
+
     const transformedItems: CanvasItem[] = [];
 
     // Always start with survey header
@@ -124,8 +129,10 @@ export class CanvasTransformer {
       .map((item, index) => ({
         field_id: item.id,
         order_global: index,
-        section_id: item.sectionId,
-        order_in_section: item.orderInSection,
+        // Note: CanvasItem doesn't have sectionId/orderInSection yet
+        // These will be implemented when section support is added
+        section_id: undefined,
+        order_in_section: undefined,
       }));
 
     return { items: reorderItems };
@@ -140,9 +147,28 @@ export class CanvasTransformer {
     if (item.title !== undefined) updatePayload.label = item.title;
     if (item.description !== undefined) updatePayload.description = item.description;
     if (item.required !== undefined) updatePayload.is_required = item.required;
-    if (item.questionType !== undefined) updatePayload.field_type = item.questionType;
-    if (item.options !== undefined) updatePayload.answer_key = item.options;
-    if (item.answerKey !== undefined) updatePayload.answer_key = item.answerKey;
+    // Note: field_type updates not supported by current UpdateFieldRequest interface
+    // This would need to be handled separately if type changes are needed
+
+    // Handle answer_key - if options are provided, merge them with existing answerKey
+    if (item.answerKey !== undefined) {
+      if (item.options !== undefined && ['multiple_choice', 'checkbox', 'dropdown'].includes(item.questionType || 'text')) {
+        // Merge options into answerKey for choice-based questions
+        updatePayload.answer_key = {
+          ...item.answerKey,
+          options: item.options,
+        };
+      } else {
+        updatePayload.answer_key = item.answerKey;
+      }
+    } else if (item.options !== undefined) {
+      // Only options provided, create basic answerKey structure
+      updatePayload.answer_key = {
+        type: item.questionType as any,
+        options: item.options,
+      };
+    }
+
     if (item.points !== undefined) updatePayload.points = item.points;
     if (item.imageFileId !== undefined) updatePayload.image_file_id = item.imageFileId;
 

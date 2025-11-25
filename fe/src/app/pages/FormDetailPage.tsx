@@ -2,7 +2,8 @@ import { useParams, useNavigate, useLocation } from "react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formsApi } from "../../features/forms";
 import { ProtectedRoute } from "../../features/auth";
-import { SurveyBuilder } from "../../features/forms/components/SurveyBuilder";
+import { SurveyBuilder } from "../../features/forms/survey-builder";
+import { SurveyBuilderErrorBoundary } from "../../features/forms/survey-builder/components/SurveyBuilderErrorBoundary";
 import { TopNavigation } from "../../features/forms/components/TopNavigation";
 import { WhitelistManagement } from "../../features/forms/components/WhitelistManagement";
 import { ResponseListTable } from "../../features/forms/components/ResponseListTable";
@@ -306,7 +307,9 @@ function FormBuilderContent() {
       {/* Content Area - adjust top padding for tabs */}
       <div className="pt-14">
         {activeTab === "builder" ? (
-          <SurveyBuilder formId={formId!} initialForm={form} />
+          <SurveyBuilderErrorBoundary>
+            <SurveyBuilder formId={formId!} form={form} />
+          </SurveyBuilderErrorBoundary>
         ) : activeTab === "access" ? (
           <div className="container mx-auto px-4 py-8 max-w-6xl">
             <WhitelistManagement formId={formId!} />

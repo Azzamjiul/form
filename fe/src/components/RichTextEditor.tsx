@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Link from '@tiptap/extension-link';
 
 interface RichTextEditorProps {
   content: string;
@@ -175,11 +174,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             class: 'list-disc pl-6',
           },
         },
-      }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-blue-600 underline hover:text-blue-800',
+        link: {
+          openOnClick: false,
+          HTMLAttributes: {
+            class: 'text-blue-600 underline hover:text-blue-800',
+          },
         },
       }),
     ],
@@ -225,8 +224,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         min-height: 40px !important;
       }
       .ProseMirror p {
-        margin: 0 !important;
-        padding: 0 !important;
+        padding: 0;
       }
       .ProseMirror:focus {
         outline: none !important;

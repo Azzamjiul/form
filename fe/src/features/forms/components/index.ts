@@ -8,21 +8,9 @@ export { FieldManagement } from './FieldManagement';
 
 // Survey Builder components
 export { CreateSectionDialog } from './CreateSectionDialog';
-export { SurveyBuilder } from './SurveyBuilder';
-export { QuestionsSidebar } from './QuestionsSidebar';
-export { QuestionCanvas } from './QuestionCanvas';
-export { BuilderToolbar } from './BuilderToolbar';
 export { TopNavigation } from './TopNavigation';
 export { ShareModal } from './ShareModal';
 export { SettingsModal } from './SettingsModal';
-
-// Center Canvas components
-export { CenterCanvas } from './CenterCanvas';
-export { SurveyHeaderCard } from './SurveyHeaderCard';
-export { TitleDescriptionCard } from './TitleDescriptionCard';
-export { QuestionCard } from './QuestionCard';
-export { PageBreakCard } from './PageBreakCard';
-export { AddElementSection } from './AddElementSection';
 
 // Whitelist components
 export { CreateWhitelistDialog } from './CreateWhitelistDialog';
