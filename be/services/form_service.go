@@ -112,9 +112,20 @@ func (s *FormService) UpdateForm(formID uuid.UUID, req *models.UpdateFormRequest
 	}
 	updates["updated_at"] = time.Now()
 
-	if err := s.db.Model(&form).Updates(updates).Error; err != nil {
-		return nil, err
+	// Add debug logging as requested
+	fmt.Printf("Updating form %s with updates: %+v\n", formID, updates)
+
+	result := s.db.Model(&form).Updates(updates)
+	if result.Error != nil {
+		return nil, result.Error
 	}
+
+	// Check if any rows were actually updated
+	if result.RowsAffected == 0 {
+		return nil, errors.New("No fields were updated - form may not exist or no changes were provided")
+	}
+
+	fmt.Printf("Successfully updated %d rows for form %s\n", result.RowsAffected, formID)
 
 	// Reload the form
 	if err := s.db.Where("id = ?", formID).First(&form).Error; err != nil {

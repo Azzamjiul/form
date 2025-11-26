@@ -23,10 +23,16 @@ export interface CanvasState {
     draggedId: string | null;
   };
   ui: {
-    isSaving: boolean;
-    justSaved: boolean;
     isCreating: boolean;
     errors: string[];
+  };
+  save: {
+    hasUnsavedChanges: boolean;
+    isManualSaving: boolean;
+    isSaving: boolean;
+    justSaved: boolean;
+    lastSaveTime: Date | null;
+    saveErrors: string[];
   };
 }
 
@@ -34,14 +40,20 @@ export type CanvasAction =
   | { type: 'SELECT_ITEM'; payload: string }
   | { type: 'UPDATE_ITEM'; payload: { id: string; updates: Partial<CanvasItem> } }
   | { type: 'DELETE_ITEM'; payload: string }
-  | { type: 'REORDER_ITEMS'; payload: { draggedId: string; targetId: string } }
+  | { type: 'REORDER_ITEMS'; payload: { draggedId: string; targetId: string } | { items: CanvasItem[] } }
   | { type: 'SET_DRAGGING'; payload: { isDragging: boolean; draggedId?: string } }
-  | { type: 'SET_SAVING'; payload: boolean }
-  | { type: 'SET_JUST_SAVED'; payload: boolean }
   | { type: 'SET_CREATING'; payload: boolean }
   | { type: 'ADD_ERROR'; payload: string }
   | { type: 'CLEAR_ERRORS' }
-  | { type: 'LOAD_ITEMS'; payload: CanvasItem[] };
+  | { type: 'LOAD_ITEMS'; payload: CanvasItem[] }
+  // Manual save actions
+  | { type: 'MARK_DIRTY' }
+  | { type: 'MARK_CLEAN'; payload: { lastSaveTime: Date } }
+  | { type: 'SET_MANUAL_SAVING'; payload: boolean }
+  | { type: 'SET_SAVE_ERROR'; payload: string }
+  | { type: 'CLEAR_SAVE_ERRORS' }
+  | { type: 'SET_SAVING'; payload: boolean }
+  | { type: 'SET_JUST_SAVED'; payload: boolean };
 
 export interface CanvasContextType {
   state: CanvasState;
@@ -51,13 +63,20 @@ export interface CanvasContextType {
     updateItem: (id: string, updates: Partial<CanvasItem>) => void;
     deleteItem: (id: string) => void;
     reorderItems: (draggedId: string, targetId: string) => void;
+    reorderItemsWithArray: (reorderedItems: CanvasItem[], _draggedId: string, _targetId: string) => void;
     setDragging: (isDragging: boolean, draggedId?: string) => void;
-    setSaving: (isSaving: boolean) => void;
-    setJustSaved: (justSaved: boolean) => void;
     setCreating: (isCreating: boolean) => void;
     addError: (error: string) => void;
     clearErrors: () => void;
     loadItems: (items: CanvasItem[]) => void;
+    // Manual save actions
+    markDirty: () => void;
+    markClean: (lastSaveTime?: Date) => void;
+    setManualSaving: (isSaving: boolean) => void;
+    setSaveError: (error: string) => void;
+    clearSaveErrors: () => void;
+    setSaving: (isSaving: boolean) => void;
+    setJustSaved: (justSaved: boolean) => void;
   };
 }
 
@@ -78,7 +97,7 @@ export interface DragDropHandlers {
 
 export interface UseDragDropOptions {
   items: CanvasItem[];
-  onReorder: (draggedId: string, targetId: string) => void;
+  onReorder: (reorderedItems: CanvasItem[], draggedId: string, targetId: string) => Promise<void>;
   debounceMs?: number;
   visualFeedback?: boolean;
 }
@@ -87,6 +106,7 @@ export interface AutoSaveOptions {
   delay?: number;
   onSave?: (isSaving: boolean) => void;
   onError?: (error: Error) => void;
+  saveId?: string; // Unique identifier for save coordination
 }
 
 export interface TransformationUtils {

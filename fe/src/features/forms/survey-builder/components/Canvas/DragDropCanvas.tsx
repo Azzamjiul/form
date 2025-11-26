@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { DndContext, DragOverlay, closestCenter } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -8,33 +8,98 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { CanvasTransformer } from "../../utils/transformations";
 import { useCanvasContext } from "../../context/CanvasContext";
+import { CardSelectionProvider, useCardIsSelected, useAnyCardDragging } from "../../context/CardContext";
 import { useDragDrop } from "../../hooks/useDragDrop";
 import { QuestionCard } from "../Cards/QuestionCard/QuestionCard";
-import { BaseCard } from "../Cards/BaseCard";
-import { RichTextEditor } from "../../../../../components/RichTextEditor";
-import type { FormWithSections } from "../../../types";
+import { SurveyHeaderCard, SectionCard, PageBreakCard, EmptyState } from "./Cards";
+import type { FormWithSections, CanvasItem } from "../../../types";
 
 interface DragDropCanvasProps {
   formId: string;
   form: FormWithSections;
+  onReorder?: (reorderedItems: CanvasItem[], draggedId: string, targetId: string) => Promise<void>;
+  surveyHeaderState?: {
+    title: string;
+    description: string;
+    lastSaved: {
+      title: string;
+      description: string;
+    };
+  };
+  onSurveyHeaderUpdate?: (updates: { title?: string; description?: string }) => void;
 }
 
-export const DragDropCanvas: React.FC<DragDropCanvasProps> = ({ formId, form }) => {
+export const DragDropCanvas: React.FC<DragDropCanvasProps> = ({
+  formId,
+  form,
+  onReorder,
+  surveyHeaderState,
+  onSurveyHeaderUpdate
+}) => {
   const { state, actions } = useCanvasContext();
 
-  // Transform form prop to canvas items when form changes
+  // Track form prop changes to prevent unnecessary rebuilds
+  const lastFormRef = useRef<FormWithSections | null>(null);
+  const formUpdateTriggerRef = useRef<string>("");
+
+  // Form prop change handling for manual save system
   useEffect(() => {
-    if (form) {
-      const canvasItems = CanvasTransformer.fromFormToCanvas(form);
-      actions.loadItems(canvasItems);
+    if (!form) return;
+
+    // Generate a unique trigger for this form change
+    const formTrigger = `${form.form_id}-${form.title}-${form.description}-${form.updated_at || ''}`;
+
+    // Skip if form hasn't actually changed (prevents unnecessary rebuilds)
+    if (lastFormRef.current && formTrigger === formUpdateTriggerRef.current) {
+      return;
     }
-  }, [form, actions.loadItems]); // Only depend on specific action function
+
+    // Update canvas items
+    const canvasItems = CanvasTransformer.fromFormToCanvas(form);
+
+    // Merge survey header state from parent if available
+    if (surveyHeaderState) {
+      const surveyHeaderItem = canvasItems.find(item => item.id === "survey-header");
+      if (surveyHeaderItem) {
+        surveyHeaderItem.title = surveyHeaderState.title;
+        surveyHeaderItem.description = surveyHeaderState.description;
+      }
+    }
+
+    actions.loadItems(canvasItems);
+
+    // Update refs for next comparison
+    lastFormRef.current = form;
+    formUpdateTriggerRef.current = formTrigger;
+  }, [form, actions.loadItems, surveyHeaderState]);
+
+  // Custom onReorder handler that updates local state and calls backend sync
+  const handleReorder = useCallback(async (
+    reorderedItems: CanvasItem[],
+    draggedId: string,
+    targetId: string
+  ): Promise<void> => {
+    // Update local state immediately
+    actions.loadItems(reorderedItems);
+
+    // Call backend sync if provided
+    if (onReorder) {
+      try {
+        await onReorder(reorderedItems, draggedId, targetId);
+      } catch (error) {
+        console.error("Backend sync failed:", error);
+        // If backend sync throws an error, revert to original order
+        const canvasItems = CanvasTransformer.fromFormToCanvas(form);
+        actions.loadItems(canvasItems);
+      }
+    }
+  }, [actions.loadItems, onReorder, form]);
 
   // Use centralized drag and drop logic
   const { dragState, sensors, handlers } = useDragDrop({
     items: state.items,
-    onReorder: actions.reorderItems,
-    debounceMs: 1500,
+    onReorder: handleReorder,
+    debounceMs: 300,
   });
 
   // Sync drag state with canvas context
@@ -51,21 +116,15 @@ export const DragDropCanvas: React.FC<DragDropCanvasProps> = ({ formId, form }) 
   // Render individual canvas items
   const renderCanvasItem = useCallback(
     (item: any) => {
-      const isSelected = state.selection.selectedId === item.id;
-      const isDragging = state.selection.draggedId === item.id;
-      const isAnyCardDragging = state.selection.isDragging;
-
       switch (item.type) {
         case "header":
           return (
             <SurveyHeaderCard
               key={item.id}
               item={item}
-              isSelected={isSelected}
-              isDragging={isDragging}
-              isAnyCardDragging={isAnyCardDragging}
+              surveyHeaderState={surveyHeaderState}
+              onSurveyHeaderUpdate={onSurveyHeaderUpdate}
               onSelect={() => actions.selectItem(item.id)}
-              onUpdate={(updates) => actions.updateItem(item.id, updates)}
             />
           );
 
@@ -74,9 +133,6 @@ export const DragDropCanvas: React.FC<DragDropCanvasProps> = ({ formId, form }) 
             <SectionCard
               key={item.id}
               item={item}
-              isSelected={isSelected}
-              isDragging={isDragging}
-              isAnyCardDragging={isAnyCardDragging}
               onSelect={() => actions.selectItem(item.id)}
               onUpdate={(updates) => actions.updateItem(item.id, updates)}
             />
@@ -88,8 +144,6 @@ export const DragDropCanvas: React.FC<DragDropCanvasProps> = ({ formId, form }) 
               key={item.id}
               item={item}
               formId={formId}
-              isSelected={isSelected}
-              isAnyCardDragging={isAnyCardDragging}
               onSelect={() => actions.selectItem(item.id)}
               onUpdate={(updates) => actions.updateItem(item.id, updates)}
               onDelete={() => actions.deleteItem(item.id)}
@@ -101,9 +155,6 @@ export const DragDropCanvas: React.FC<DragDropCanvasProps> = ({ formId, form }) 
             <PageBreakCard
               key={item.id}
               item={item}
-              isSelected={isSelected}
-              isDragging={isDragging}
-              isAnyCardDragging={isAnyCardDragging}
               onSelect={() => actions.selectItem(item.id)}
             />
           );
@@ -112,15 +163,7 @@ export const DragDropCanvas: React.FC<DragDropCanvasProps> = ({ formId, form }) 
           return null;
       }
     },
-    [
-      state.selection.selectedId,
-      state.selection.draggedId,
-      state.selection.isDragging,
-      actions.selectItem,
-      actions.updateItem,
-      actions.deleteItem,
-      formId,
-    ],
+    [actions.selectItem, actions.updateItem, actions.deleteItem, formId],
   );
 
   if (!form) {
@@ -132,23 +175,41 @@ export const DragDropCanvas: React.FC<DragDropCanvasProps> = ({ formId, form }) 
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={handlers.onDragStart}
-      onDragOver={handlers.onDragOver}
-      onDragEnd={handlers.onDragEnd}
-    >
+    <CardSelectionProvider>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handlers.onDragStart}
+        onDragOver={handlers.onDragOver}
+        onDragEnd={handlers.onDragEnd}
+      >
       <SortableContext
         items={sortableItems}
         strategy={verticalListSortingStrategy}
       >
-        <div className="space-y-4">
+        <div className="canvas-container">
           {state.items.map(renderCanvasItem)}
 
           {/* Empty state */}
           {state.items.length === 1 && <EmptyState formId={formId} />}
         </div>
+
+        {/* Custom CSS for canvas container spacing */}
+        <style>{`
+          .canvas-container > * + * {
+            margin-top: 1rem;
+          }
+
+          .canvas-container > *:first-child {
+            margin-top: 2.5rem; /* Special spacing for survey header */
+          }
+
+          .canvas-container .dragging {
+            opacity: 0.7;
+            transform: scale(1.02);
+            z-index: 50;
+          }
+        `}</style>
       </SortableContext>
 
       <DragOverlay>
@@ -177,6 +238,7 @@ export const DragDropCanvas: React.FC<DragDropCanvasProps> = ({ formId, form }) 
         ) : null}
       </DragOverlay>
     </DndContext>
+    </CardSelectionProvider>
   );
 };
 
@@ -184,20 +246,19 @@ export const DragDropCanvas: React.FC<DragDropCanvasProps> = ({ formId, form }) 
 const SortableQuestionCard: React.FC<{
   item: any;
   formId: string;
-  isSelected: boolean;
-  isAnyCardDragging: boolean;
   onSelect: () => void;
   onUpdate: (updates: any) => void;
   onDelete: () => void;
 }> = ({
   item,
   formId,
-  isSelected,
-  isAnyCardDragging,
   onSelect,
   onUpdate,
   onDelete,
 }) => {
+  // Use context instead of props for selection state
+  const isSelected = useCardIsSelected(item.id);
+  const isAnyCardDragging = useAnyCardDragging();
   const {
     attributes,
     listeners,
@@ -234,179 +295,6 @@ const SortableQuestionCard: React.FC<{
   );
 };
 
-// Survey Header Card Component
-const SurveyHeaderCard: React.FC<{
-  item: any;
-  isSelected: boolean;
-  isDragging: boolean;
-  isAnyCardDragging: boolean;
-  onSelect: () => void;
-  onUpdate: (updates: any) => void;
-}> = ({
-  item,
-  isSelected,
-  isDragging,
-  isAnyCardDragging,
-  onSelect,
-  onUpdate,
-}) => {
-  const handleTitleChange = (title: string) => {
-    onUpdate({ title });
-  };
 
-  const handleDescriptionChange = (description: string) => {
-    onUpdate({ description });
-  };
 
-  return (
-    <BaseCard
-      isSelected={isSelected}
-      isDragging={isDragging}
-      isAnyCardDragging={isAnyCardDragging}
-      onSelect={onSelect}
-      className="border-blue-200 mt-10"
-    >
-      <div className="p-6">
-        <RichTextEditor
-          content={item.title}
-          onChange={handleTitleChange}
-          placeholder="Untitled Form"
-          className="text-2xl font-bold text-gray-900 min-h-[32px]"
-        />
-        {item.description && (
-          <div className="mt-2">
-            <RichTextEditor
-              content={item.description}
-              onChange={handleDescriptionChange}
-              placeholder="Add a description..."
-              className="text-gray-600 min-h-[20px]"
-            />
-          </div>
-        )}
-      </div>
-    </BaseCard>
-  );
-};
 
-// Section Card Component
-const SectionCard: React.FC<{
-  item: any;
-  isSelected: boolean;
-  isDragging: boolean;
-  isAnyCardDragging: boolean;
-  onSelect: () => void;
-  onUpdate: (updates: any) => void;
-}> = ({
-  item,
-  isSelected,
-  isDragging,
-  isAnyCardDragging,
-  onSelect,
-  onUpdate,
-}) => {
-  return (
-    <BaseCard
-      isSelected={isSelected}
-      isDragging={isDragging}
-      isAnyCardDragging={isAnyCardDragging}
-      onSelect={onSelect}
-    >
-      <div className="p-6">
-        <RichTextEditor
-          content={item.title}
-          onChange={(title) => onUpdate({ title })}
-          placeholder="Section Title"
-          className="text-xl font-semibold text-gray-900 min-h-[28px]"
-        />
-        {item.description && (
-          <div className="mt-2">
-            <RichTextEditor
-              content={item.description}
-              onChange={(description) => onUpdate({ description })}
-              placeholder="Section description..."
-              className="text-gray-600 min-h-[20px]"
-            />
-          </div>
-        )}
-      </div>
-    </BaseCard>
-  );
-};
-
-// Page Break Card Component
-const PageBreakCard: React.FC<{
-  item: any;
-  isSelected: boolean;
-  isDragging: boolean;
-  isAnyCardDragging: boolean;
-  onSelect: () => void;
-}> = ({ item, isSelected, isDragging, isAnyCardDragging, onSelect }) => {
-  return (
-    <BaseCard
-      isSelected={isSelected}
-      isDragging={isDragging}
-      isAnyCardDragging={isAnyCardDragging}
-      onSelect={onSelect}
-      className="border-dashed border-gray-300 bg-gray-50"
-    >
-      <div className="p-4 text-center">
-        <div className="text-gray-400 text-sm">
-          {item.sectionNumber && item.totalSections ? (
-            <>
-              Page {item.sectionNumber} of {item.totalSections}
-            </>
-          ) : (
-            <>Page Break</>
-          )}
-        </div>
-      </div>
-    </BaseCard>
-  );
-};
-
-// Empty State Component
-const EmptyState: React.FC<{ formId: string }> = ({ formId: _formId }) => {
-  return (
-    <div className="text-center py-12">
-      <div className="text-gray-400 mb-4">
-        <svg
-          className="w-16 h-16 mx-auto"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-          />
-        </svg>
-      </div>
-      <h3 className="text-lg font-medium text-gray-900 mb-2">
-        Start building your form
-      </h3>
-      <p className="text-gray-500 mb-6">
-        Add questions to get started with your form.
-      </p>
-      <div className="flex justify-center gap-3">
-        <button
-          onClick={() => {
-            console.log("Add question clicked");
-          }}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Add Question
-        </button>
-        <button
-          onClick={() => {
-            console.log("Add section clicked");
-          }}
-          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-        >
-          Add Section
-        </button>
-      </div>
-    </div>
-  );
-};

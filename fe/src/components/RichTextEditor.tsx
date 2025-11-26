@@ -1,320 +1,139 @@
-import React, { useCallback, useState } from 'react';
-import { useEditor, EditorContent, type Editor } from '@tiptap/react';
+import React, { useImperativeHandle, forwardRef, useState } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import Underline from '@tiptap/extension-underline';
+import Link from '@tiptap/extension-link';
 
 interface RichTextEditorProps {
   content: string;
-  onChange: (content: string) => void;
+  onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
   style?: React.CSSProperties;
   showToolbar?: boolean;
   toolbarPosition?: 'top' | 'bottom';
+  debounceMs?: number;
+  context?: 'title' | 'description' | 'content';
 }
 
-const MenuBar = ({ editor }: { editor: Editor | null }) => {
-  if (!editor) {
-    return null;
-  }
-
-  const setLink = useCallback(() => {
-    const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('URL', previousUrl);
-
-    // cancelled
-    if (url === null) {
-      return;
-    }
-
-    // empty
-    if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run();
-      return;
-    }
-
-    // update link
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-  }, [editor]);
-
-  // Prevent toolbar from losing focus
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  return (
-    <div
-      className="flex items-center gap-1 p-2 bg-white border border-gray-200 rounded-md shadow-sm"
-      onMouseDown={handleMouseDown}
-    >
-      <button
-        onMouseDown={handleMouseDown}
-        onClick={() => editor.chain().focus().toggleBold().run()}
-        className={`p-2 rounded transition-colors ${
-          editor.isActive('bold')
-            ? 'bg-gray-200 text-gray-900'
-            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-        }`}
-        title="Bold"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M13.5,15.5H10V12.5H13.5A1.5,1.5 0 0,1 15,14A1.5,1.5 0 0,1 13.5,15.5M10,6.5H13A1.5,1.5 0 0,1 14.5,8A1.5,1.5 0 0,1 13,9.5H10M15.6,10.79C16.57,10.11 17.25,9 17.25,8C17.25,5.74 15.5,4 13.25,4H7V18H14.04C16.14,18 17.75,16.3 17.75,14.21C17.75,12.69 16.89,11.39 15.6,10.79Z" />
-        </svg>
-      </button>
-      <button
-        onMouseDown={handleMouseDown}
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={`p-2 rounded transition-colors ${
-          editor.isActive('italic')
-            ? 'bg-gray-200 text-gray-900'
-            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-        }`}
-        title="Italic"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M10,4V7H12.21L8.79,15H6V18H14V15H11.79L15.21,7H18V4H10Z" />
-        </svg>
-      </button>
-      <button
-        onMouseDown={handleMouseDown}
-        onClick={() => editor.chain().focus().toggleUnderline().run()}
-        className={`p-2 rounded transition-colors ${
-          editor.isActive('underline')
-            ? 'bg-gray-200 text-gray-900'
-            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-        }`}
-        title="Underline"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M5,21H19V19H5V21M12,17A6,6 0 0,0 18,11V3H15.5V11A3.5,3.5 0 0,1 12,14.5A3.5,3.5 0 0,1 8.5,11V3H6V11A6,6 0 0,0 12,17Z" />
-        </svg>
-      </button>
-      <button
-        onMouseDown={handleMouseDown}
-        onClick={() => editor.chain().focus().toggleStrike().run()}
-        className={`p-2 rounded transition-colors ${
-          editor.isActive('strike')
-            ? 'bg-gray-200 text-gray-900'
-            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-        }`}
-        title="Strikethrough"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M23,12V14H18.61C19.61,16.14 19.56,22 12.38,22C4.05,22.05 4.37,15.5 4.37,15.5L8.34,15.55C8.34,15.55 8.14,18.82 11.5,18.82C14.86,18.82 15.12,16.5 14.5,14H1V12H23M3.41,10H20.59C20.59,10 20.75,5.12 15.39,5.05C10.03,4.96 9.92,9.17 9.92,9.17L5.96,9.12C5.96,9.12 5.39,1.62 13.29,2C19.7,2.31 21.82,7.05 21.82,7.05L17.86,7.08C17.86,7.08 16.95,5.03 14.5,5.03C12.05,5.03 11.5,7.08 11.5,7.08L3.41,7.05V10Z" />
-        </svg>
-      </button>
-      <button
-        onMouseDown={handleMouseDown}
-        onClick={setLink}
-        className={`p-2 rounded transition-colors ${
-          editor.isActive('link')
-            ? 'bg-gray-200 text-gray-900'
-            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-        }`}
-        title="Link"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M10.59,13.41C11,13.8 11,14.44 10.59,14.83C10.2,15.22 9.56,15.22 9.17,14.83C7.22,12.88 7.22,9.71 9.17,7.76V7.76L12.71,4.22C14.66,2.27 17.83,2.27 19.78,4.22C21.73,6.17 21.73,9.34 19.78,11.29L18.29,12.78C18.3,11.96 18.17,11.14 17.89,10.36L18.36,9.88C19.54,8.71 19.54,6.81 18.36,5.64C17.19,4.46 15.29,4.46 14.12,5.64L10.59,9.17C9.41,10.34 9.41,12.24 10.59,13.41M13.41,9.17C13.8,8.78 14.44,8.78 14.83,9.17C16.78,11.12 16.78,14.29 14.83,16.24V16.24L11.29,19.78C9.34,21.73 6.17,21.73 4.22,19.78C2.27,17.83 2.27,14.66 4.22,12.71L5.71,11.22C5.7,12.04 5.83,12.86 6.11,13.65L5.64,14.12C4.46,15.29 4.46,17.19 5.64,18.36C6.81,19.54 8.71,19.54 9.88,18.36L13.41,14.83C14.59,13.66 14.59,11.76 13.41,10.59C13,10.2 13,9.56 13.41,9.17Z" />
-        </svg>
-      </button>
-      <div className="w-px h-6 bg-gray-300 mx-1" />
-      <button
-        onMouseDown={handleMouseDown}
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className={`p-2 rounded transition-colors ${
-          editor.isActive('bulletList')
-            ? 'bg-gray-200 text-gray-900'
-            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-        }`}
-        title="Bullet List"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M7,5H21V7H7V5M7,13V11H21V13H7M4,4.5A1.5,1.5 0 0,1 5.5,6A1.5,1.5 0 0,1 4,7.5A1.5,1.5 0 0,1 2.5,6A1.5,1.5 0 0,1 4,4.5M4,10.5A1.5,1.5 0 0,1 5.5,12A1.5,1.5 0 0,1 4,13.5A1.5,1.5 0 0,1 2.5,12A1.5,1.5 0 0,1 4,10.5M7,19V17H21V19H7M4,16.5A1.5,1.5 0 0,1 5.5,18A1.5,1.5 0 0,1 4,19.5A1.5,1.5 0 0,1 2.5,18A1.5,1.5 0 0,1 4,16.5Z" />
-        </svg>
-      </button>
-      <button
-        onMouseDown={handleMouseDown}
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className={`p-2 rounded transition-colors ${
-          editor.isActive('orderedList')
-            ? 'bg-gray-200 text-gray-900'
-            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-        }`}
-        title="Numbered List"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M7,13V11H21V13H7M4,4.5A1.5,1.5 0 0,1 5.5,6A1.5,1.5 0 0,1 4,7.5A1.5,1.5 0 0,1 2.5,6A1.5,1.5 0 0,1 4,4.5M7,3V5H21V3H7M4,16.5A1.5,1.5 0 0,1 5.5,18A1.5,1.5 0 0,1 4,19.5A1.5,1.5 0 0,1 2.5,18A1.5,1.5 0 0,1 4,16.5M7,15V17H21V15H7M7,9V7H21V9H7Z" />
-        </svg>
-      </button>
-    </div>
-  );
-};
-
-export const RichTextEditor: React.FC<RichTextEditorProps> = ({
+const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
   content,
   onChange,
   placeholder = 'Start typing...',
   className = '',
-  style = {},
+  style,
   showToolbar = true,
-  toolbarPosition = 'top'
-}) => {
+  toolbarPosition = 'top',
+  context = 'content',
+}, ref) => {
   const [isFocused, setIsFocused] = useState(false);
-
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        orderedList: {
-          HTMLAttributes: {
-            class: 'list-decimal pl-6',
-          },
-        },
-        bulletList: {
-          HTMLAttributes: {
-            class: 'list-disc pl-6',
-          },
-        },
-        link: {
-          openOnClick: false,
-          HTMLAttributes: {
-            class: 'text-blue-600 underline hover:text-blue-800',
-          },
-        },
+      StarterKit,
+      Underline,
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        linkOnPaste: true,
       }),
     ],
     content,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      const html = editor.getHTML();
+      onChange(html);
     },
+    editable: true,
     onFocus: () => setIsFocused(true),
     onBlur: () => setIsFocused(false),
-    editorProps: {
-      attributes: {
-        class: 'focus:outline-none min-h-[40px] outline-none',
-        style: 'font-size: inherit; color: inherit; font-weight: inherit; line-height: inherit;'
-      }
-    }
   });
 
-  // Update editor content when prop changes
-  React.useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content);
+  // Expose editor methods via ref
+  useImperativeHandle(ref, () => ({
+    getContent: () => editor?.getHTML() || '',
+    setContent: (newContent: string) => {
+      editor?.commands.setContent(newContent);
+    },
+    focus: () => {
+      editor?.chain().focus().run();
+    },
+    clearContent: () => {
+      editor?.commands.clearContent();
+    },
+    editor: editor,
+  }), [editor]);
+
+  // Enhanced toolbar component with smaller, professional buttons
+  const Toolbar = () => (
+    <div className="flex flex-wrap gap-0.5 p-1 h-8">
+      <button
+        onClick={() => editor?.chain().focus().toggleBold().run()}
+        className={`min-w-[32px] min-h-[32px] p-1.5 rounded hover:bg-gray-100 text-xs font-medium transition-colors duration-150 ${editor?.isActive('bold') ? 'text-blue-600 bg-blue-50' : 'text-gray-600'}`}
+        title="Bold"
+      >
+        B
+      </button>
+      <button
+        onClick={() => editor?.chain().focus().toggleItalic().run()}
+        className={`min-w-[32px] min-h-[32px] p-1.5 rounded hover:bg-gray-100 text-xs font-medium transition-colors duration-150 ${editor?.isActive('italic') ? 'text-blue-600 bg-blue-50 italic' : 'text-gray-600'}`}
+        title="Italic"
+      >
+        I
+      </button>
+      <button
+        onClick={() => editor?.chain().focus().toggleUnderline().run()}
+        className={`min-w-[32px] min-h-[32px] p-1.5 rounded hover:bg-gray-100 text-xs font-medium transition-colors duration-150 ${editor?.isActive('underline') ? 'text-blue-600 bg-blue-50 underline' : 'text-gray-600'}`}
+        title="Underline"
+      >
+        U
+      </button>
+      <button
+        onClick={() => editor?.chain().focus().toggleLink().run()}
+        className={`min-w-[32px] min-h-[32px] p-1.5 rounded hover:bg-gray-100 text-xs font-medium transition-colors duration-150 ${editor?.isActive('link') ? 'text-blue-600 bg-blue-50' : 'text-gray-600'}`}
+        title="Link"
+      >
+        🔗
+      </button>
+    </div>
+  );
+
+  
+  // Get context-based minimum height
+  const getMinHeight = () => {
+    switch (context) {
+      case 'title': return 'min-h-[20px]';
+      case 'description': return 'min-h-[16px]';
+      default: return '';
     }
-  }, [content, editor]);
-
-  if (!editor) {
-    return null;
-  }
-
-  // Add custom styles to prevent Tiptap conflicts
-  React.useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      .ProseMirror {
-        outline: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        border: none !important;
-        background: transparent !important;
-        font-size: inherit !important;
-        color: inherit !important;
-        font-weight: inherit !important;
-        line-height: inherit !important;
-        min-height: 40px !important;
-      }
-      .ProseMirror p {
-        padding: 0;
-      }
-      .ProseMirror:focus {
-        outline: none !important;
-      }
-      .ProseMirror ol {
-        list-style: decimal !important;
-        padding-left: 1.5rem !important;
-        margin: 0.5rem 0 !important;
-      }
-      .ProseMirror ul {
-        list-style: disc !important;
-        padding-left: 1.5rem !important;
-        margin: 0.5rem 0 !important;
-      }
-      .ProseMirror li {
-        margin: 0.25rem 0 !important;
-      }
-    `;
-    document.head.appendChild(style);
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
+  };
 
   return (
     <div
-      className={`relative ${className}`}
+      className={`relative transition-all duration-200 ${className}`}
       style={style}
     >
-      {/* Toolbar */}
-      {showToolbar && isFocused && toolbarPosition === 'top' && (
-        <div style={{ marginBottom: '8px' }}>
-          <MenuBar editor={editor} />
-        </div>
-      )}
+      {showToolbar && toolbarPosition === 'top' && isFocused && <Toolbar />}
 
-      {/* Editor */}
-      <div
-        className={`
-          transition-all duration-200
-          ${style?.border === 'none' && !style?.borderBottom ? '' : `
-            ${style?.border ? '' : 'border rounded-md'}
-            ${isFocused && style?.border !== 'none'
-              ? 'border-purple-400 ring-2 ring-purple-400 ring-opacity-20'
-              : style?.border !== 'none'
-              ? 'border-gray-200 hover:border-gray-300'
-              : ''
-            }
-          `}
-        `}
-        style={{
-          padding: style?.padding || '8px',
-          background: style?.background || 'white',
-          cursor: 'text',
-          minHeight: '60px',
-          border: style?.border,
-          borderBottom: style?.borderBottom,
-          borderRadius: style?.border === 'none' ? '0' : undefined,
-        }}
-      >
-        <div style={{ fontSize: style?.fontSize, color: style?.color }}>
-          <EditorContent
-            editor={editor}
-          />
-        </div>
-        {!editor.getText() && (
-          <div
-            className="absolute pointer-events-none text-gray-400"
-            style={{
-              top: style?.padding === '8px 0' ? '8px' :
-                  style?.padding === '12px 0' ? '12px' : '8px',
-              left: style?.padding?.toString().includes('0') ? '0' : '8px',
-              fontSize: style?.fontSize,
-              fontWeight: style?.fontWeight,
-              color: style?.color,
-            }}
-          >
-            {placeholder}
-          </div>
-        )}
+      <div className={`border-b-2 transition-colors duration-200 ${
+        isFocused ? 'border-blue-500' : 'border-transparent'
+      }`}>
+        <EditorContent
+          editor={editor}
+          className={`prose prose-sm max-w-none focus:outline-none focus-within:outline-none [&>*]:my-1 ${getMinHeight()}`}
+        />
       </div>
 
-      {/* Bottom Toolbar */}
-      {showToolbar && isFocused && toolbarPosition === 'bottom' && (
-        <div style={{ marginTop: '8px' }}>
-          <MenuBar editor={editor} />
+  
+      {showToolbar && toolbarPosition === 'bottom' && isFocused && <Toolbar />}
+
+      {!editor?.isFocused && content === '' && (
+        <div className="absolute top-1 left-2 text-gray-400 pointer-events-none text-sm">
+          {placeholder}
         </div>
       )}
     </div>
   );
-};
+});
+
+RichTextEditor.displayName = 'RichTextEditor';
 
 export default RichTextEditor;

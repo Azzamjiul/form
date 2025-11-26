@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RichTextEditor } from '../../../../../../components/RichTextEditor';
+import RichTextEditor from '../../../../../../components/RichTextEditor';
 // import { CompactImageUpload } from '../../../../components/CompactImageUpload'; // TODO: Enable when image upload UI is implemented
 import type { CanvasItem } from '../../../types/canvas';
 
@@ -61,7 +61,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
           content={title}
           onChange={handleTitleChange}
           placeholder="Question title"
-          className="min-h-[24px]"
+          context="title"
         />
       </div>
 
@@ -72,7 +72,8 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
             content={description}
             onChange={handleDescriptionChange}
             placeholder="Add description (optional)"
-            className="min-h-[20px] text-sm text-gray-600"
+            context="description"
+            className="text-sm text-gray-600"
           />
         </div>
       )}

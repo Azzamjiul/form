@@ -10,10 +10,17 @@ const initialState: CanvasState = {
     draggedId: null,
   },
   ui: {
-    isSaving: false,
-    justSaved: false,
     isCreating: false,
     errors: [],
+  },
+  // Manual save state
+  save: {
+    hasUnsavedChanges: false,
+    isManualSaving: false,
+    isSaving: false,
+    justSaved: false,
+    lastSaveTime: null,
+    saveErrors: [],
   },
 };
 
@@ -59,20 +66,30 @@ function canvasReducer(state: CanvasState, action: CanvasAction): CanvasState {
       };
 
     case 'REORDER_ITEMS':
-      const { draggedId, targetId } = action.payload;
-      const draggedIndex = state.items.findIndex(item => item.id === draggedId);
-      const targetIndex = state.items.findIndex(item => item.id === targetId);
+      // Handle both old format (draggedId, targetId) and new format (items array)
+      if ('items' in action.payload) {
+        // New format: directly use the provided reordered items
+        return {
+          ...state,
+          items: action.payload.items.map((item, index) => ({ ...item, order: index })),
+        };
+      } else {
+        // Old format: legacy behavior for backward compatibility
+        const { draggedId, targetId } = action.payload;
+        const draggedIndex = state.items.findIndex(item => item.id === draggedId);
+        const targetIndex = state.items.findIndex(item => item.id === targetId);
 
-      if (draggedIndex === -1 || targetIndex === -1) return state;
+        if (draggedIndex === -1 || targetIndex === -1) return state;
 
-      const newItems = [...state.items];
-      const [draggedItem] = newItems.splice(draggedIndex, 1);
-      newItems.splice(targetIndex, 0, draggedItem);
+        const newItems = [...state.items];
+        const [draggedItem] = newItems.splice(draggedIndex, 1);
+        newItems.splice(targetIndex, 0, draggedItem);
 
-      return {
-        ...state,
-        items: newItems.map((item, index) => ({ ...item, order: index })),
-      };
+        return {
+          ...state,
+          items: newItems.map((item, index) => ({ ...item, order: index })),
+        };
+      }
 
     case 'SET_DRAGGING':
       return {
@@ -88,30 +105,77 @@ function canvasReducer(state: CanvasState, action: CanvasAction): CanvasState {
         })),
       };
 
-    case 'SET_SAVING':
-      return {
-        ...state,
-        ui: {
-          ...state.ui,
-          isSaving: action.payload,
-        },
-      };
-
-    case 'SET_JUST_SAVED':
-      return {
-        ...state,
-        ui: {
-          ...state.ui,
-          justSaved: action.payload,
-        },
-      };
-
     case 'SET_CREATING':
       return {
         ...state,
         ui: {
           ...state.ui,
           isCreating: action.payload,
+        },
+      };
+
+    case 'MARK_DIRTY':
+      return {
+        ...state,
+        save: {
+          ...state.save,
+          hasUnsavedChanges: true,
+        },
+      };
+
+    case 'MARK_CLEAN':
+      return {
+        ...state,
+        save: {
+          ...state.save,
+          hasUnsavedChanges: false,
+          lastSaveTime: action.payload.lastSaveTime,
+          saveErrors: [],
+        },
+      };
+
+    case 'SET_MANUAL_SAVING':
+      return {
+        ...state,
+        save: {
+          ...state.save,
+          isManualSaving: action.payload,
+        },
+      };
+
+    case 'SET_SAVING':
+      return {
+        ...state,
+        save: {
+          ...state.save,
+          isSaving: action.payload,
+        },
+      };
+
+    case 'SET_SAVE_ERROR':
+      return {
+        ...state,
+        save: {
+          ...state.save,
+          saveErrors: [...state.save.saveErrors, action.payload],
+        },
+      };
+
+    case 'SET_JUST_SAVED':
+      return {
+        ...state,
+        save: {
+          ...state.save,
+          justSaved: action.payload,
+        },
+      };
+
+    case 'CLEAR_SAVE_ERRORS':
+      return {
+        ...state,
+        save: {
+          ...state.save,
+          saveErrors: [],
         },
       };
 
@@ -154,14 +218,22 @@ export function CanvasProvider({ children }: CanvasProviderProps) {
     deleteItem: (id: string) => dispatch({ type: 'DELETE_ITEM', payload: id }),
     reorderItems: (draggedId: string, targetId: string) =>
       dispatch({ type: 'REORDER_ITEMS', payload: { draggedId, targetId } }),
+    reorderItemsWithArray: (reorderedItems: CanvasItem[], _draggedId: string, _targetId: string) =>
+      dispatch({ type: 'REORDER_ITEMS', payload: { items: reorderedItems } }),
     setDragging: (isDragging: boolean, draggedId?: string) =>
       dispatch({ type: 'SET_DRAGGING', payload: { isDragging, draggedId } }),
-    setSaving: (isSaving: boolean) => dispatch({ type: 'SET_SAVING', payload: isSaving }),
-    setJustSaved: (justSaved: boolean) => dispatch({ type: 'SET_JUST_SAVED', payload: justSaved }),
     setCreating: (isCreating: boolean) => dispatch({ type: 'SET_CREATING', payload: isCreating }),
     addError: (error: string) => dispatch({ type: 'ADD_ERROR', payload: error }),
     clearErrors: () => dispatch({ type: 'CLEAR_ERRORS' }),
     loadItems: (items: CanvasItem[]) => dispatch({ type: 'LOAD_ITEMS', payload: items }),
+    // Manual save actions
+    markDirty: () => dispatch({ type: 'MARK_DIRTY' }),
+    markClean: (lastSaveTime?: Date) => dispatch({ type: 'MARK_CLEAN', payload: { lastSaveTime: lastSaveTime || new Date() } }),
+    setManualSaving: (isSaving: boolean) => dispatch({ type: 'SET_MANUAL_SAVING', payload: isSaving }),
+    setSaveError: (error: string) => dispatch({ type: 'SET_SAVE_ERROR', payload: error }),
+    clearSaveErrors: () => dispatch({ type: 'CLEAR_SAVE_ERRORS' }),
+    setSaving: (isSaving: boolean) => dispatch({ type: 'SET_SAVING', payload: isSaving }),
+    setJustSaved: (justSaved: boolean) => dispatch({ type: 'SET_JUST_SAVED', payload: justSaved }),
   }), []); // Empty dependency array since actions reference dispatch which is stable
 
   const value: CanvasContextType = useMemo(() => ({

@@ -1,240 +1,167 @@
-import React, { memo, useCallback, useRef, useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { formsApi } from "../../api/forms";
-import { fieldsApi } from "../../api/fields";
+import React, { memo, useCallback, useEffect, useState } from "react";
 import { CanvasProvider, useCanvasContext } from "../context/CanvasContext";
-import { CanvasTransformer } from "../utils/transformations";
-import { useAutoSave } from "../hooks/useAutoSave";
+import { useManualSave } from "../hooks/useManualSave";
+import { SaveButton } from "./SaveButton";
 import { Canvas } from "./Canvas/Canvas";
-import type {
-  FormWithSections,
-  CreateFieldRequest,
-  CanvasItem,
-} from "../../types";
+import type { FormWithSections, CanvasItem } from "../../types";
 
 interface SurveyBuilderProps {
   formId: string;
   form: FormWithSections;
 }
 
+// Main wrapper component - handles provider wrapping
+export const SurveyBuilder = memo(
+  (props: SurveyBuilderProps) => {
+    // Early return if form is undefined (no context needed)
+    if (!props.form) {
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-50">
+          <div className="text-center">
+            <div className="text-gray-500">Loading form...</div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <CanvasProvider>
+        <SurveyBuilderComponent {...props} />
+      </CanvasProvider>
+    );
+  },
+  // Existing memo comparison
+  (prevProps, nextProps) => {
+    return (
+      prevProps.formId === nextProps.formId &&
+      prevProps.form?.form_id === nextProps.form?.form_id &&
+      !!prevProps.form === !!nextProps.form
+    );
+  },
+);
+
+// Internal component - contains all business logic using context
 const SurveyBuilderComponent: React.FC<SurveyBuilderProps> = ({
   formId,
   form,
 }) => {
-  // Early return if form is undefined
-  if (!form) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-center">
-          <div className="text-gray-500">Loading form...</div>
-        </div>
-      </div>
-    );
-  }
+    const [surveyHeaderUpdates, setSurveyHeaderUpdates] = useState<{ title?: string; description?: string }>({});
 
-  const queryClient = useQueryClient();
+  // Get canvas context for dirty state management (now within provider!)
+  const { state, actions } = useCanvasContext();
 
-  // Use form prop directly (no duplicate query needed)
-  // Form data is passed as prop and managed through local state updates
-
-  // Custom debounce function
-  const debounce = useCallback((func: Function, delay: number) => {
-    const timerRef = useRef<number | null>(null);
-    return (...args: any[]) => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-      timerRef.current = window.setTimeout(() => {
-        func(...args);
-        timerRef.current = null;
-      }, delay);
-    };
-  }, []);
-
-  // Auto-save functionality for form metadata
-  const { debouncedSave: debouncedFormSave } = useAutoSave(
-    form,
-    async (formData) => {
-      if (!formData || !formData.form_id) return;
-      const response = await formsApi.updateForm(formId, {
-        title: formData.title,
-        description: formData.description,
-      });
-      if (!response.success) {
-        throw new Error(response.error?.message || "Failed to save form");
-      }
+  // Manual save hook
+  const manualSave = useManualSave({
+    formId,
+    initialForm: form,
+    canvasItems: state.items,
+    surveyHeaderUpdates,
+    onSaveStart: () => {
+      actions.setManualSaving(true);
     },
-    { delay: 2000 },
-  );
-
-  // Handle adding new question
-  // @ts-ignore - Intentionally unused for future implementation
-  const _handleAddQuestion = useCallback(
-    async (type: string = "text", afterId?: string) => {
-      console.log("afterId:", afterId); // Mark as used to avoid TypeScript error
-      try {
-        const nextOrder = 0; // This would be calculated based on existing items
-
-        const defaultQuestion: CreateFieldRequest = {
-          content_type: "input_field",
-          field_type: type,
-          label: "Untitled Question",
-          description: "",
-          order_global: nextOrder,
-          section_id: undefined,
-          order_in_section: undefined,
-          is_required: false,
-          points: 0,
-        };
-
-        const response = await fieldsApi.createField(formId, defaultQuestion);
-        if (response.success) {
-          // Remove query invalidation - auto-save handles local state updates
-        }
-      } catch (error) {
-        console.error("Failed to create question:", error);
-      }
+    onSaveComplete: () => {
+      actions.setManualSaving(false);
+      // Clear survey header updates after successful save
+      setSurveyHeaderUpdates({});
     },
-    [formId, queryClient],
-  );
-
-  // Handle adding new section
-  // @ts-ignore - Intentionally unused for future implementation
-  const _handleAddSection = useCallback(async () => {
-    try {
-      const nextOrder = 0; // This would be calculated based on existing items
-
-      const defaultSection: CreateFieldRequest = {
-        content_type: "section",
-        label: "Untitled Section",
-        description: "",
-        order_global: nextOrder,
-        is_required: false,
-        points: 0,
-      };
-
-      const response = await fieldsApi.createField(formId, defaultSection);
-      if (response.success) {
-        // Remove query invalidation - auto-save handles local state updates
-      }
-    } catch (error) {
-      console.error("Failed to create section:", error);
-    }
-  }, [formId, queryClient]);
-
-  // Field auto-save functionality
-  const fieldAutoSave = useCallback(
-    async (fieldId: string, item: CanvasItem) => {
-      const fieldUpdate = CanvasTransformer.itemToFieldUpdate(item);
-      const response = await fieldsApi.updateField(
-        formId,
-        fieldId,
-        fieldUpdate,
-      );
-      if (!response.success) {
-        throw new Error(response.error?.message || "Failed to save field");
-      }
-      return response;
+    onSaveError: (errors: string[]) => {
+      actions.setSaveError(errors.join(', '));
     },
-    [formId],
-  );
-
-  const debouncedFieldUpdate = useCallback(debounce(fieldAutoSave, 2000), [
-    fieldAutoSave,
-  ]);
-
-  // Enhanced Canvas component with auto-save integration
-  const EnhancedCanvas = memo(() => {
-    const { state, actions } = useCanvasContext();
-
-    // Auto-save integration for canvas updates
-    useEffect(() => {
-      // Create enhanced update handler that triggers auto-save
-      const originalUpdateItem = actions.updateItem;
-      const enhancedUpdateItem = (
-        itemId: string,
-        updates: Partial<CanvasItem>,
-      ) => {
-        // Update local state immediately
-        originalUpdateItem(itemId, updates);
-
-        // Trigger auto-save for form header
-        if (itemId === "survey-header") {
-          // Get updated form data from canvas items
-          const headerItem = state.items.find(
-            (item) => item.id === "survey-header",
-          );
-          if (headerItem) {
-            const updatedForm = {
-              ...form!,
-              title: headerItem.title || "",
-              description: headerItem.description || "",
-            };
-            debouncedFormSave(updatedForm);
-          }
-        }
-        // Trigger auto-save for individual fields
-        else {
-          const updatedItem = state.items.find((item) => item.id === itemId);
-          if (updatedItem) {
-            debouncedFieldUpdate(itemId, updatedItem);
-          }
-        }
-      };
-
-      // Override the update action
-      actions.updateItem = enhancedUpdateItem;
-
-      return () => {
-        // Restore original function on cleanup
-        actions.updateItem = originalUpdateItem;
-      };
-    }, [actions, debouncedFormSave, debouncedFieldUpdate, state.items, form]);
-
-    return <Canvas formId={formId} form={form} />;
   });
 
+  
+  // Mark form as dirty when canvas items or survey header changes
+  useEffect(() => {
+    if (state.items.length > 0 || Object.keys(surveyHeaderUpdates).length > 0) {
+      manualSave.markDirty();
+    }
+  }, [state.items, surveyHeaderUpdates, manualSave.markDirty]);
+
+  // Survey header update handler
+  const handleSurveyHeaderUpdate = useCallback((updates: { title?: string; description?: string }) => {
+    setSurveyHeaderUpdates(prev => ({ ...prev, ...updates }));
+    actions.markDirty();
+  }, [actions.markDirty]);
+
   // Handle reordering with backend sync
-  // @ts-ignore - Intentionally unused for future implementation
-  const _handleReorderItems = useCallback(
-    async (draggedId: string, targetId: string) => {
+  const handleReorder = useCallback(
+    async (reorderedItems: CanvasItem[], draggedId: string, targetId: string): Promise<void> => {
       try {
-        // Get current canvas items (this would come from context)
-        const canvasItems = CanvasTransformer.fromFormToCanvas(form!);
-        const reorderedItems = canvasItems.filter(
-          (item) => item.type === "question",
-        );
+        // Update local state immediately
+        actions.reorderItemsWithArray(reorderedItems, draggedId, targetId);
 
-        // Reorder logic
-        const draggedIndex = reorderedItems.findIndex(
-          (item) => item.id === draggedId,
-        );
-        const targetIndex = reorderedItems.findIndex(
-          (item) => item.id === targetId,
-        );
+        // Sync to backend with only question items for reordering
+        const questionItems = reorderedItems.filter(item => item.type === "question");
+        const reorderRequest = {
+          fields: questionItems.map(item => ({
+            field_id: item.id,
+            order_global: item.order || 0,
+          }))
+        };
 
-        if (draggedIndex === -1 || targetIndex === -1) return;
+        // Call reorder API
+        const response = await fetch(`/api/v1/forms/${formId}/fields/reorder`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(reorderRequest),
+        });
 
-        const [draggedItem] = reorderedItems.splice(draggedIndex, 1);
-        reorderedItems.splice(targetIndex, 0, draggedItem);
+        if (!response.ok) {
+          throw new Error('Failed to reorder items');
+        }
 
-        // Sync to backend
-        const reorderRequest =
-          CanvasTransformer.fromCanvasToReorderRequest(reorderedItems);
-        await fieldsApi.reorderFields(formId, reorderRequest);
-
-        // Refresh data
-        // Remove query invalidation - auto-save handles local state updates
+        // Mark as clean since reorder is immediately saved
+        manualSave.markClean();
       } catch (error) {
         console.error("Failed to reorder items:", error);
+        actions.setSaveError('Failed to reorder items. Please try again.');
+        // Don't throw error - let user try again or save manually
       }
     },
-    [formId, form, queryClient],
+    [formId, actions, manualSave]
   );
+
+  // Handle browser navigation with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (manualSave.hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [manualSave.hasUnsavedChanges]);
+
+  // Handle page visibility change (user switching tabs)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && manualSave.hasUnsavedChanges) {
+        // User is leaving the page - auto-save changes
+        manualSave.saveAll();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [manualSave.hasUnsavedChanges, manualSave.saveAll]);
 
   return (
     <CanvasProvider>
       <div className="min-h-screen bg-gray-50">
+        {/* Save Button */}
+        <SaveButton
+          onSave={manualSave.saveAll}
+          isSaving={manualSave.isSaving}
+          hasUnsavedChanges={manualSave.hasUnsavedChanges}
+          saveErrors={manualSave.saveErrors}
+          variant="floating"
+        />
+
+        
         {/* Main Canvas Container */}
         <div
           className="flex-1 bg-gray-50 overflow-y-auto overflow-x-hidden"
@@ -254,7 +181,25 @@ const SurveyBuilderComponent: React.FC<SurveyBuilderProps> = ({
               gap: "16px",
             }}
           >
-            <EnhancedCanvas />
+            <Canvas
+              formId={formId}
+              form={{
+                ...form,
+                // Merge current form data with survey header updates for display
+                title: surveyHeaderUpdates.title ?? form.title,
+                description: surveyHeaderUpdates.description ?? form.description,
+              }}
+              onReorder={handleReorder}
+              surveyHeaderState={{
+                title: (surveyHeaderUpdates.title || form.title) ?? '',
+                description: (surveyHeaderUpdates.description || form.description) ?? '',
+                lastSaved: {
+                  title: form.title ?? '',
+                  description: form.description ?? '',
+                },
+              }}
+              onSurveyHeaderUpdate={handleSurveyHeaderUpdate}
+            />
           </div>
         </div>
 
@@ -285,13 +230,3 @@ const SurveyBuilderComponent: React.FC<SurveyBuilderProps> = ({
   );
 };
 
-export const SurveyBuilder = memo(
-  SurveyBuilderComponent,
-  (prevProps, nextProps) => {
-    return (
-      prevProps.formId === nextProps.formId &&
-      prevProps.form?.form_id === nextProps.form?.form_id &&
-      !!prevProps.form === !!nextProps.form
-    );
-  },
-);

@@ -16,7 +16,7 @@ import {
 } from '@dnd-kit/sortable';
 import type { UseDragDropOptions, DragDropState, DragDropHandlers } from '../types/canvas';
 
-export function useDragDrop({ items, onReorder, debounceMs = 1500 }: UseDragDropOptions) {
+export function useDragDrop({ items, onReorder, debounceMs = 300 }: UseDragDropOptions) {
   const [dragState, setDragState] = useState<DragDropState>({
     draggedId: null,
     dragOverId: null,
@@ -114,16 +114,17 @@ export function useDragDrop({ items, onReorder, debounceMs = 1500 }: UseDragDrop
 
     if (oldIndex === -1 || newIndex === -1) return;
 
-    arrayMove(currentItems, oldIndex, newIndex);
+    // Fix critical bug: assign the result of arrayMove
+    const reorderedItems = arrayMove(currentItems, oldIndex, newIndex);
 
     // Clear existing timer
     if (reorderTimerRef.current) {
       clearTimeout(reorderTimerRef.current);
     }
 
-    // Debounced reorder
+    // Debounced reorder with reordered items
     reorderTimerRef.current = setTimeout(() => {
-      onReorderRef.current(active.id as string, over.id as string);
+      onReorderRef.current(reorderedItems, active.id as string, over.id as string);
       reorderTimerRef.current = null;
     }, debounceMs);
   }, [debounceMs]); // Remove items and onReorder dependencies, use refs instead
@@ -151,7 +152,7 @@ export function useDragDrop({ items, onReorder, debounceMs = 1500 }: UseDragDrop
       return {
         ...baseStyle,
         borderTop: '3px solid #5F35F5',
-        marginTop: '-3px',
+        transform: 'translateY(-1.5px)', // Use transform instead of negative margin
       };
     }
 
@@ -159,7 +160,7 @@ export function useDragDrop({ items, onReorder, debounceMs = 1500 }: UseDragDrop
       return {
         ...baseStyle,
         borderBottom: '3px solid #5F35F5',
-        marginBottom: '-3px',
+        transform: 'translateY(1.5px)', // Use transform instead of negative margin
       };
     }
 
@@ -229,11 +230,21 @@ export function useDragDrop({ items, onReorder, debounceMs = 1500 }: UseDragDrop
           clearTimeout(reorderTimerRef.current);
         }
 
-        // Debounced reorder
-        reorderTimerRef.current = setTimeout(() => {
-          onReorderRef.current(draggedId, id);
-          reorderTimerRef.current = null;
-        }, debounceMs);
+        // For legacy drag-drop, we need to handle reordering with current items
+        const currentItems = itemsRef.current;
+        const oldIndex = currentItems.findIndex(item => item.id === draggedId);
+        const newIndex = currentItems.findIndex(item => item.id === id);
+
+        if (oldIndex !== -1 && newIndex !== -1) {
+          // Fix critical bug: assign the result of arrayMove
+          const reorderedItems = arrayMove(currentItems, oldIndex, newIndex);
+
+          // Debounced reorder with reordered items
+          reorderTimerRef.current = setTimeout(() => {
+            onReorderRef.current(reorderedItems, draggedId, id);
+            reorderTimerRef.current = null;
+          }, debounceMs);
+        }
       }
 
       setDragState({
