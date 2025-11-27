@@ -39,6 +39,7 @@ export interface CanvasState {
 export type CanvasAction =
   | { type: 'SELECT_ITEM'; payload: string }
   | { type: 'UPDATE_ITEM'; payload: { id: string; updates: Partial<CanvasItem> } }
+  | { type: 'ADD_ITEM'; payload: CanvasItem }
   | { type: 'DELETE_ITEM'; payload: string }
   | { type: 'REORDER_ITEMS'; payload: { draggedId: string; targetId: string } | { items: CanvasItem[] } }
   | { type: 'SET_DRAGGING'; payload: { isDragging: boolean; draggedId?: string } }
@@ -61,6 +62,7 @@ export interface CanvasContextType {
   actions: {
     selectItem: (id: string) => void;
     updateItem: (id: string, updates: Partial<CanvasItem>) => void;
+    addItem: (item: CanvasItem) => void;
     deleteItem: (id: string) => void;
     reorderItems: (draggedId: string, targetId: string) => void;
     reorderItemsWithArray: (reorderedItems: CanvasItem[], _draggedId: string, _targetId: string) => void;
@@ -128,6 +130,7 @@ export interface BaseCardProps {
   onDragLeave?: () => void;
   onDrop?: (e: React.DragEvent) => void;
   onDragEnd?: () => void;
+  cardId?: string;
 }
 
 export interface QuestionCardProps extends Omit<BaseCardProps, 'children'> {

@@ -55,6 +55,12 @@ function canvasReducer(state: CanvasState, action: CanvasAction): CanvasState {
         ),
       };
 
+    case 'ADD_ITEM':
+      return {
+        ...state,
+        items: [...state.items, action.payload],
+      };
+
     case 'DELETE_ITEM':
       return {
         ...state,
@@ -215,6 +221,7 @@ export function CanvasProvider({ children }: CanvasProviderProps) {
     selectItem: (id: string) => dispatch({ type: 'SELECT_ITEM', payload: id }),
     updateItem: (id: string, updates: Partial<CanvasItem>) =>
       dispatch({ type: 'UPDATE_ITEM', payload: { id, updates } }),
+    addItem: (item: CanvasItem) => dispatch({ type: 'ADD_ITEM', payload: item }),
     deleteItem: (id: string) => dispatch({ type: 'DELETE_ITEM', payload: id }),
     reorderItems: (draggedId: string, targetId: string) =>
       dispatch({ type: 'REORDER_ITEMS', payload: { draggedId, targetId } }),
@@ -256,3 +263,19 @@ export function useCanvasContext(): CanvasContextType {
   }
   return context;
 }
+
+// Helper hooks for direct card state access (replacing CardSelectionContext)
+export const useCanvasCardIsSelected = (id: string): boolean => {
+  const { state } = useCanvasContext();
+  return state.selection.selectedId === id;
+};
+
+export const useCanvasCardIsDragging = (id: string): boolean => {
+  const { state } = useCanvasContext();
+  return state.selection.draggedId === id;
+};
+
+export const useCanvasAnyCardDragging = (): boolean => {
+  const { state } = useCanvasContext();
+  return state.selection.isDragging;
+};

@@ -8,7 +8,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { CanvasTransformer } from "../../utils/transformations";
 import { useCanvasContext } from "../../context/CanvasContext";
-import { CardSelectionProvider, useCardIsSelected, useAnyCardDragging } from "../../context/CardContext";
+import { useCanvasCardIsSelected, useCanvasAnyCardDragging } from "../../context/CanvasContext";
 import { useDragDrop } from "../../hooks/useDragDrop";
 import { QuestionCard } from "../Cards/QuestionCard/QuestionCard";
 import { SurveyHeaderCard, SectionCard, PageBreakCard, EmptyState } from "./Cards";
@@ -175,7 +175,6 @@ export const DragDropCanvas: React.FC<DragDropCanvasProps> = ({
   }
 
   return (
-    <CardSelectionProvider>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -238,7 +237,6 @@ export const DragDropCanvas: React.FC<DragDropCanvasProps> = ({
         ) : null}
       </DragOverlay>
     </DndContext>
-    </CardSelectionProvider>
   );
 };
 
@@ -256,9 +254,9 @@ const SortableQuestionCard: React.FC<{
   onUpdate,
   onDelete,
 }) => {
-  // Use context instead of props for selection state
-  const isSelected = useCardIsSelected(item.id);
-  const isAnyCardDragging = useAnyCardDragging();
+  // Use canvas context for selection state
+  const isSelected = useCanvasCardIsSelected(item.id);
+  const isAnyCardDragging = useCanvasAnyCardDragging();
   const {
     attributes,
     listeners,

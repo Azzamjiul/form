@@ -1,7 +1,7 @@
 import React from "react";
 import { BaseCard } from "../../../Cards/BaseCard";
 import RichTextEditor from "../../../../../../../components/RichTextEditor";
-import { useCardIsSelected, useCardIsDragging, useAnyCardDragging } from "../../../../context/CardContext";
+import { useCanvasCardIsSelected, useCanvasCardIsDragging, useCanvasAnyCardDragging } from "../../../../context/CanvasContext";
 import type { SectionCardProps } from "./SectionCard.types";
 
 export const SectionCard: React.FC<SectionCardProps> = ({
@@ -9,10 +9,10 @@ export const SectionCard: React.FC<SectionCardProps> = ({
   onSelect,
   onUpdate,
 }) => {
-  // Use context instead of props for selection state
-  const isSelected = useCardIsSelected(item.id);
-  const isDragging = useCardIsDragging(item.id);
-  const isAnyCardDragging = useAnyCardDragging();
+  // Use canvas context for selection state
+  const isSelected = useCanvasCardIsSelected(item.id);
+  const isDragging = useCanvasCardIsDragging(item.id);
+  const isAnyCardDragging = useCanvasAnyCardDragging();
 
   // Simple save handler for section (manual save system)
   const handleSectionChange = (updates: Partial<any>) => {

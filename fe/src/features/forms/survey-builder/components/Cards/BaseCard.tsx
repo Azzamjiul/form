@@ -14,7 +14,10 @@ export const BaseCard: React.FC<BaseCardProps> = ({
   onDragLeave,
   onDrop,
   onDragEnd,
+  cardId,
 }) => {
+  const [isHovering, setIsHovering] = React.useState(false);
+
   const cardClasses = [
     'canvas-card',
     'bg-white',
@@ -58,6 +61,20 @@ export const BaseCard: React.FC<BaseCardProps> = ({
     }
   };
 
+  const handleMouseEnter = () => {
+    setIsHovering(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovering(false);
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (onSelect) {
+      onSelect();
+    }
+  };
+
   const handleDragEnd = () => {
     if (onDragEnd) {
       onDragEnd();
@@ -68,7 +85,9 @@ export const BaseCard: React.FC<BaseCardProps> = ({
     <div
       className={cardClasses}
       draggable={draggable}
-      onClick={onSelect}
+      onClick={handleClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}

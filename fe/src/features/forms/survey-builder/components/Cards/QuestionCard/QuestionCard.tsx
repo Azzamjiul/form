@@ -37,6 +37,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       onDragEnd={onDragEnd}
+      cardId={item.id}
     >
       <div className="p-6 space-y-4">
         {/* Header with question type */}

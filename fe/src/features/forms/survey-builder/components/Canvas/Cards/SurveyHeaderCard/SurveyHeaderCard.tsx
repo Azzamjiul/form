@@ -1,11 +1,12 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useRef } from "react";
 import { BaseCard } from "../../../Cards/BaseCard";
 import RichTextEditor from "../../../../../../../components/RichTextEditor";
+import AddItemButtons from "../../../AddItemButtons/AddItemButtons";
 import {
-  useCardIsSelected,
-  useCardIsDragging,
-  useAnyCardDragging,
-} from "../../../../context/CardContext";
+  useCanvasCardIsSelected,
+  useCanvasCardIsDragging,
+  useCanvasAnyCardDragging,
+} from "../../../../context/CanvasContext";
 import { useCanvasContext } from "../../../../context/CanvasContext";
 import type { SurveyHeaderCardProps } from "./SurveyHeaderCard.types";
 
@@ -15,13 +16,27 @@ export const SurveyHeaderCard: React.FC<SurveyHeaderCardProps> = ({
   onSurveyHeaderUpdate,
   onSelect,
 }) => {
-  // Use context instead of props for selection state
-  const isSelected = useCardIsSelected(item.id);
-  const isDragging = useCardIsDragging(item.id);
-  const isAnyCardDragging = useAnyCardDragging();
+  // Use canvas context for selection state
+  const isSelected = useCanvasCardIsSelected(item.id);
+  const isDragging = useCanvasCardIsDragging(item.id);
+  const isAnyCardDragging = useCanvasAnyCardDragging();
 
   // Get canvas context for manual save integration
   const { state, actions } = useCanvasContext();
+
+  // Add ref for AddItemButtons positioning
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Add click handler for card selection
+  const handleCardClick = useCallback(
+    (e: React.MouseEvent) => {
+      // Only trigger selection if not clicking on RichTextEditor toolbar or interactive elements
+      if (onSelect && !e.defaultPrevented) {
+        onSelect();
+      }
+    },
+    [onSelect],
+  );
 
   // Enhanced change handlers with manual save integration
   const handleTitleChange = useCallback(
@@ -60,51 +75,62 @@ export const SurveyHeaderCard: React.FC<SurveyHeaderCardProps> = ({
   const title = surveyHeaderState?.title || item.title || "";
   const description = surveyHeaderState?.description || item.description || "";
 
-  // Enhanced state checks for better UX feedback
-  const hasUnsavedChanges = surveyHeaderState
-    ? title !== surveyHeaderState.lastSaved.title ||
-      description !== surveyHeaderState.lastSaved.description
-    : state.save.hasUnsavedChanges;
-
   return (
-    <BaseCard
-      isSelected={isSelected}
-      isDragging={isDragging}
-      isAnyCardDragging={isAnyCardDragging}
-      onSelect={onSelect}
-      className={`
-        border-blue-200 mt-10 transition-all duration-200
-        shadow-sm
-        ${hasUnsavedChanges ? "shadow-lg shadow-blue-100 border-blue-300" : ""}
-      `}
-    >
-      <div className="p-6">
-        {/* Title Editor */}
-        <div className="transition-all duration-200">
-          <RichTextEditor
-            content={title}
-            onChange={handleTitleChange}
-            placeholder="Untitled Form"
-            className="text-2xl text-gray-900 min-h-[32px]"
-            debounceMs={600} // Faster debounce for better UX
-            context="title"
-          />
-        </div>
-
-        {/* Description Editor with conditional rendering */}
-        {(description || surveyHeaderState) && (
-          <div className="mt-3 transition-all duration-200">
+    <>
+      <BaseCard
+        isSelected={isSelected}
+        isDragging={isDragging}
+        isAnyCardDragging={isAnyCardDragging}
+        onSelect={onSelect}
+        className="mt-10"
+        cardId={item.id}
+      >
+        <div
+          ref={cardRef}
+          onClick={handleCardClick}
+          className="p-6"
+        >
+          {/* Title Editor */}
+          <div className="transition-all duration-200">
             <RichTextEditor
-              content={description}
-              onChange={handleDescriptionChange}
-              placeholder="Add a description..."
-              className="text-gray-600 min-h-[20px]"
+              content={title}
+              onChange={handleTitleChange}
+              placeholder="Untitled Form"
+              className="text-2xl text-gray-900 min-h-[32px]"
               debounceMs={600} // Faster debounce for better UX
-              context="description"
+              context="title"
             />
           </div>
-        )}
-      </div>
-    </BaseCard>
+
+          {/* Description Editor with conditional rendering */}
+          {(description || surveyHeaderState) && (
+            <div className="mt-3 transition-all duration-200">
+              <RichTextEditor
+                content={description}
+                onChange={handleDescriptionChange}
+                placeholder="Add a description..."
+                className="text-gray-600 min-h-[20px]"
+                debounceMs={600} // Faster debounce for better UX
+                context="description"
+              />
+            </div>
+          )}
+        </div>
+      </BaseCard>
+
+      {/* AddItemButtons for adding new questions */}
+      <AddItemButtons
+        formId={item.form_id}
+        visible={isSelected && !isAnyCardDragging}
+        cardRef={cardRef}
+        isCardDragging={isDragging}
+        onItemCreated={(newItemId) => {
+          // Optional: Handle new item creation
+          if (newItemId) {
+            console.log('New item created:', newItemId);
+          }
+        }}
+      />
+    </>
   );
 };
